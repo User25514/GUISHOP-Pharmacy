@@ -8,25 +8,101 @@ def funcTime(func):
         return val
 
     return wrapper
-
-
+class Test(unittest.TestCase):
+    def Val():
+        check1 = dataValidation.Register.nameVal("Dave")
+        check2 = dataValidation.Register.nameVal("Jeremy2")
+        check3 = dataValidation.Register.nameVal("Jared ")
+        if check1 == True and check2 == False and check3 == False:
+            print("Register.name\n[] Approved")
+        else:
+            print("Register.name\n[] Failed")
+        check1 = dataValidation.Register.emailVal("wow@gmail.co.uk")
+        check2 = dataValidation.Register.emailVal("AnotherOne@yahoo.com")
+        check3 = dataValidation.Register.emailVal("AAAAAAA@gmail")
+        check4 = dataValidation.Register.emailVal("GoodGame.com")
+        if check1 == check2 == True and check3 == check4 == False:
+            print("Register.emailVal\n[] Approved")
+        else:
+            print("Register.emailVal\n[] Failed")
+        check1 = dataValidation.Register.passwordVal("MyNameIsYan11")
+        check2 = dataValidation.Register.passwordVal("dav 54")
+        check3 = dataValidation.Register.passwordVal("David")
+        check4 = dataValidation.Register.passwordVal("SuperloooooooooongString1245")
+        if check1 == True and check2 == check3 == check4 == False:
+            print("Register.passwordVal\n[] Approved")
+        else:
+            print("Register.passwordVal\n[] Failed")
+    def Test():
 
 class dataValidation:
     class Register:#[6]
         def nameVal(name):
-            pass
+            try:
+                num = 0
+                for x in name:
+                    if x.isnumeric() == True or x == " ":
+                        raise Exception
+                    else:
+                        pass
+                return True
+                    
+            except Exception:
+                return False
         def dobVal(DOB):
-            pass
+            try:
+                pass
+            except Exception:
+                return False
         def emailVal(email):
-            pass
+            try:
+                atSymbol,dot = 0,0
+                for x in email:
+                    if x == "@":
+                        atSymbol += 1
+                    elif x == ".":
+                        dot += 1
+                if atSymbol == 1 and dot >= 1 and dot <= 2:
+                    return True
+                else:
+                    raise Exception
+            except Exception:
+                return False
+            
         def passwordVal(password):
-            pass 
+            try:
+                x = len(password)
+                if (x < 15 and x >= 8):
+                    cap,char,num = 0,0,0
+                    for x in password:
+                        if x.isnumeric() == True:
+                            num += 1
+                        elif x == " ":
+                            raise Exception
+                        elif x.isupper() == True:
+                            cap += 1
+                        elif x.isalpha() == True:
+                            char += 1
+                    if not(num > 1 and (char+cap) > 4 and cap > 1):
+                        raise Exception
+                    else:
+                        return True
+                else:
+                    raise Exception
+            except Exception:
+                return False
+             
     class Login:#[7]
         def dobVal(DOB):
-            pass
+            try:
+                pass
+            except Exception:
+                return False
         def passwordVal(password):
-            pass
-    pass
+            try:
+                pass
+            except Exception:
+                return False
 class backProcess:
     def Book():#[1][2] Books a free date/timeslot
         pass
@@ -58,4 +134,5 @@ if __name__ == "__main__":
     pass
 
 
-frontProcess.f1(0)
+#frontProcess.f1(0)
+Test.Val()
