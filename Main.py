@@ -1,5 +1,5 @@
 import time
-
+import sqlite3
 def funcTime(func):
     def wrapper(*args,**kwargs):
         before = time.time()
@@ -46,12 +46,12 @@ class dataValidation:
                     else:
                         pass
                 return True
-                    
+
             except Exception:
                 return False
         def dobVal(DOB):
             try:
-                pass
+                return True
             except Exception:
                 return False
         def emailVal(email):
@@ -68,7 +68,7 @@ class dataValidation:
                     raise Exception
             except Exception:
                 return False
-            
+
         def passwordVal(password):
             try:
                 x = len(password)
@@ -91,7 +91,7 @@ class dataValidation:
                     raise Exception
             except Exception:
                 return False
-             
+
     class Login:#[7]
         def dobVal(DOB):
             try:
@@ -104,15 +104,42 @@ class dataValidation:
             except Exception:
                 return False
 class backProcess:
+    def __init__():
+        self.REG = dataValidation.Register()
+        self.con = sqlite3.connect('register.db')
+        self.cur = self.con.cursor()
+        self.cur.execute("CREATE TABLE Register (name,dob,email,password)")
+        self.con.commit()
     def Book():#[1][2] Books a free date/timeslot
         pass
-    def ShopState():#[2][3] Choice to shop in person or thorough the application. 
+    def ShopState():#[2][3] Choice to shop in person or thorough the application.
         pass
-    def ShoppingRecipt():#[4] A recipt will be produced with details of what has been bought with the total price. 
+    def ShoppingRecipt():#[4] A recipt will be produced with details of what has been bought with the total price.
         # The receipt will be associated with a unique qr code that the user will use at the payment stage.
         pass
     def Register():#[5] Make Account
-        #[6]
+        #[6];
+        while True:
+            if a == False:
+                name = str(input("Name: "))
+            if b == False:
+                dob = str(input("DOB: "))
+            if c == False:
+                email = str(input("Email: "))
+            if d == False:
+                password = str(input("Password: "))
+            a = self.REG.nameVal(name)
+            b = self.REG.dobVal(dob)
+            c = self.REG.emailVal(email)
+            d = self.REG.passwordVal(password)
+            if (a and b and c and d) == True:
+                break
+        self.cur.execute(f"INSERRT INTO Register VALUES ('{name}','{dob}','{email}','{password}')")
+        self.con.commit()
+        for row in self.cur.execute('SELECT * FROM Register ORDER BY name'):
+            print(row)
+
+        self.con.close()
         pass
     def Login():#[5] login
         #[7]
@@ -135,4 +162,6 @@ if __name__ == "__main__":
 
 
 #frontProcess.f1(0)
-Test.Val()
+#Test.Val()
+rem = backProcess()
+rem.Register()
