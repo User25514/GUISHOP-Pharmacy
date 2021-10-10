@@ -1,5 +1,7 @@
 import time
 import sqlite3
+from PyQt5.QtWidgets import QApplication, QLabel
+
 def funcTime(func):
     def wrapper(*args,**kwargs):
         before = time.time()
@@ -8,7 +10,7 @@ def funcTime(func):
         return val
 
     return wrapper
-class Test(unittest.TestCase):
+class Test():
     def Val():
         check1 = dataValidation.Register.nameVal("Dave")
         check2 = dataValidation.Register.nameVal("Jeremy2")
@@ -34,7 +36,7 @@ class Test(unittest.TestCase):
         else:
             print("Register.passwordVal\n[] Failed")
     def Test():
-
+        pass
 class dataValidation:
     class Register:#[6]
         def nameVal(name):
@@ -104,12 +106,15 @@ class dataValidation:
             except Exception:
                 return False
 class backProcess:
-    def __init__():
-        self.REG = dataValidation.Register()
-        self.con = sqlite3.connect('register.db')
+    def __init__(self):
+        self.REG = dataValidation.Register
+        self.con = sqlite3.connect('database.db')
         self.cur = self.con.cursor()
-        self.cur.execute("CREATE TABLE Register (name,dob,email,password)")
-        self.con.commit()
+        try:
+            self.cur.execute("CREATE TABLE Register (name,dob,email,password)")
+            self.con.commit()
+        except:
+            pass
     def Book():#[1][2] Books a free date/timeslot
         pass
     def ShopState():#[2][3] Choice to shop in person or thorough the application.
@@ -117,8 +122,9 @@ class backProcess:
     def ShoppingRecipt():#[4] A recipt will be produced with details of what has been bought with the total price.
         # The receipt will be associated with a unique qr code that the user will use at the payment stage.
         pass
-    def Register():#[5] Make Account
+    def Register(self):#[5] Make Account
         #[6];
+        a = b = c = d = False
         while True:
             if a == False:
                 name = str(input("Name: "))
@@ -134,18 +140,27 @@ class backProcess:
             d = self.REG.passwordVal(password)
             if (a and b and c and d) == True:
                 break
-        self.cur.execute(f"INSERRT INTO Register VALUES ('{name}','{dob}','{email}','{password}')")
+        self.cur.execute(f"INSERT INTO Register VALUES ('{name}','{dob}','{email}','{password}')")
         self.con.commit()
         for row in self.cur.execute('SELECT * FROM Register ORDER BY name'):
             print(row)
 
-        self.con.close()
+        #self.con.close()
         pass
-    def Login():#[5] login
+    def Login(self):#[5] login
         #[7]
+        name = str(input("Name: "))
+        dob = str(input("DOB: "))
+        for row in self.cur.execute('SELECT * FROM Register ORDER BY name'):
+            print(row)
+            if row[0] == name and row[1] == dob:
+                print("Granted")
         pass
     pass
-class frontProcess:# PythonQT
+class frontProcess:# PythonQT https://build-system.fman.io/pyqt5-tutorial
+    def __init__(self):
+        pass
+
     @funcTime
     def f1(self):
         print("hello")
@@ -163,5 +178,7 @@ if __name__ == "__main__":
 
 #frontProcess.f1(0)
 #Test.Val()
-rem = backProcess()
-rem.Register()
+#rem = backProcess()
+#rem.Register()
+#rem.Register()
+#rem.Login()

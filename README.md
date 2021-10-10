@@ -17,5 +17,3 @@ Each product will have a particular price and a unique qr code. At the checkout,
 The receipt must also have a unique qr code
 
 # Whats happening:
-In this I will be using socket programming to imitate the relationship between client and server.
-I chose to focus on the functionality first, and then focus on the gui later.
