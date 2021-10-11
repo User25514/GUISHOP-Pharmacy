@@ -23,7 +23,7 @@ import calendar
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import QDate
 
-class CalendarDemo(QWidget):
+class calendarPopup(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle('Calendar Demo')
@@ -73,15 +73,17 @@ def main():
     app = QApplication(sys.argv)
     window = QWidget()
     layout = QVBoxLayout()
-    demo = CalendarDemo()
+    cal = calendarPopup()
     button = QPushButton('Top')
     button2 = QPushButton('Bottom')
+    line = QLineEdit("Here")
+    layout.addWidget(line)
     def notification():
         alert = QMessageBox()
         alert.setText('You clicked the button!')
         alert.exec()
     def calendar():
-        demo.show()
+        cal.show()
     button.clicked.connect(notification)
     button2.clicked.connect(calendar)
     layout.addWidget(button)

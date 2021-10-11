@@ -1,6 +1,11 @@
 import time
 import sqlite3
-from PyQt5.QtWidgets import QApplication, QLabel
+import sys
+from datetime import datetime
+import calendar
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import QDate
+import _thread
 
 def funcTime(func):
     def wrapper(*args,**kwargs):
@@ -122,45 +127,184 @@ class backProcess:
     def ShoppingRecipt():#[4] A recipt will be produced with details of what has been bought with the total price.
         # The receipt will be associated with a unique qr code that the user will use at the payment stage.
         pass
-    def Register(self):#[5] Make Account
+    def Register(self,name,dob,email,password):#[5] Make Account
         #[6];
-        a = b = c = d = False
-        while True:
-            if a == False:
-                name = str(input("Name: "))
-            if b == False:
-                dob = str(input("DOB: "))
-            if c == False:
-                email = str(input("Email: "))
-            if d == False:
-                password = str(input("Password: "))
-            a = self.REG.nameVal(name)
-            b = self.REG.dobVal(dob)
-            c = self.REG.emailVal(email)
-            d = self.REG.passwordVal(password)
-            if (a and b and c and d) == True:
-                break
+        self.REG = dataValidation.Register
+        self.con = sqlite3.connect('database.db')
+        self.cur = self.con.cursor()
+        a = self.REG.nameVal(name)
+        b = self.REG.dobVal(dob)
+        c = self.REG.emailVal(email)
+        d = self.REG.passwordVal(password)
+        print(name,dob,email,password)
+        print(a,b,c,d)
+        if (a and b and c and d) == False:
+            return False
+        else:
+            pass            
+        
         self.cur.execute(f"INSERT INTO Register VALUES ('{name}','{dob}','{email}','{password}')")
         self.con.commit()
         for row in self.cur.execute('SELECT * FROM Register ORDER BY name'):
             print(row)
 
-        #self.con.close()
+        self.con.close()
+        return True
         pass
-    def Login(self):#[5] login
+    def Login(self,dob,password):#[5] login
         #[7]
-        name = str(input("Name: "))
-        dob = str(input("DOB: "))
+        self.con = sqlite3.connect('database.db')
+        self.cur = self.con.cursor()
         for row in self.cur.execute('SELECT * FROM Register ORDER BY name'):
             print(row)
-            if row[0] == name and row[1] == dob:
-                print("Granted")
+            if row[3] == password and row[1] == dob:
+                self.con.close()
+                return True
+        self.con.close()
+        return False
         pass
-    pass
+    class MultiThread():
+        def DateCheck(DateDic):
+            pass
 class frontProcess:# PythonQT https://build-system.fman.io/pyqt5-tutorial
     def __init__(self):
         pass
+    class calendarPopup(QWidget):
+        def __init__(self):
+            super().__init__()
+            self.setWindowTitle('Calendar Demo')
+            self.setGeometry(300, 300, 350, 250)
+            self.initUI()
+        def initUI(self):
+            self.calendar = QCalendarWidget(self)
+            self.button = QPushButton(self)
+            self.button.setText("Approve")
+            self.button.move(20,210)
+            self.button.clicked.connect(self.notification)
+            self.calendar.move(20, 20)
+            self.calendar.setGridVisible(True)
+            Year = datetime.now().year
+            Month = datetime.now().month
+            Day = datetime.now().day
+            self.qDate = QDate(Year, Month, Day)
+            self.calendar.setMinimumDate(QDate(Year, Month, Day))
+            if (Day + 15) > calendar.monthrange(Year, Month)[1]:
+                newDay = (Day + 15) - calendar.monthrange(Year, Month)[1]
+                self.calendar.setMaximumDate(QDate(Year, Month+1, newDay))
+            else:
+                self.calendar.setMaximumDate(QDate(Year, Month, Day + 15))
+            self.calendar.setSelectedDate(QDate(Year, Month, 1))
+            self.calendar.clicked.connect(self.printDateInfo)
 
+        def printDateInfo(self, qDate):
+            self.qDate = qDate
+            print('{0}/{1}/{2}'.format(qDate.month(), qDate.day(), qDate.year()))
+            print(f'Day Number of the year: {qDate.dayOfYear()}')
+            print(f'Day Number of the week: {qDate.dayOfWeek()}')
+
+        def notification(self):
+                alert = QMessageBox()
+                print(self.qDate)
+                alert.setText('{0}/{1}/{2}'.format(self.qDate.month(), self.qDate.day(), self.qDate.year()))
+                alert.exec()
+                self.close()
+    class Register(QWidget):
+        def __init__(self):
+            super().__init__()
+            self.setWindowTitle('Register')
+            self.setGeometry(300, 300, 350, 250)
+            self.initUI()
+            #_thread.start_new_thread(backProcess.MultiThread.DateCheck, (DateCheck,))
+        def initUI(self):
+            self.label1 = QLabel(self)
+            self.label1.setText("Name:")
+            self.label1.move(20,10)
+            self.Username = QLineEdit(self)
+            self.Username.move(20,30)
+
+            self.label2 = QLabel(self)
+            self.label2.setText("DOB:")
+            self.label2.move(20,50)
+            self.DOB = QLineEdit(self)
+            self.DOB.move(20,70)
+            
+            self.Calbutton = QPushButton(self)
+            self.Calbutton.setText("Approve")
+            self.Calbutton.move(20,210)
+            self.Calbutton.clicked.connect(self.calen)
+
+
+            self.label3 = QLabel(self)
+            self.label3.setText("Email:")
+            self.label3.move(20,90)
+            self.Email = QLineEdit(self)
+            self.Email.move(20,110)
+
+            self.label4 = QLabel(self)
+            self.label4.setText("Password:")
+            self.label4.move(20,130)
+            self.Password = QLineEdit(self)
+            self.Password.move(20,150)
+            self.Password.setEchoMode(QLineEdit.Password)
+            self.label5 = QLabel(self)
+            self.label5.setText("Must contain 2 capital letters\n1 number\nbetween 8 and 15 characters long.")
+            self.label5.move(170,133)
+
+            self.button = QPushButton(self)
+            self.button.setText("Approve")
+            self.button.move(20,210)
+            self.button.clicked.connect(self.notification)
+
+        def notification(self):
+            choice = backProcess.Register(self,self.Username.text(),self.DOB.text(),self.Email.text(),self.Password.text())
+            alert = QMessageBox()
+            if choice == True:
+                alert.setText("Registered")
+                self.close()
+            elif choice == False:
+                alert.setText("Error")
+            else:
+                pass
+            alert.exec()
+        def calen(self):
+            cal = frontProcess.calendarPopup()
+            cal.show()
+    class Login(QWidget):
+        def __init__(self):
+            super().__init__()
+            self.setWindowTitle('Login')
+            self.setGeometry(300, 300, 350, 250)
+            self.initUI()
+        def initUI(self):
+            self.label1 = QLabel(self)
+            self.label1.setText("DOB:")
+            self.label1.move(20,10)
+            self.DOB = QLineEdit(self)
+            self.DOB.move(20,30)
+
+            self.label4 = QLabel(self)
+            self.label4.setText("Password:")
+            self.label4.move(20,50)
+            self.Password = QLineEdit(self)
+            self.Password.move(20,70)
+            self.Password.setEchoMode(QLineEdit.Password)
+
+            self.button = QPushButton(self)
+            self.button.setText("Approve")
+            self.button.move(20,210)
+            self.button.clicked.connect(self.notification)
+
+        def notification(self):
+            choice = backProcess.Login(self,self.DOB.text(),self.Password.text())
+            alert = QMessageBox()
+            if choice == True:
+                alert.setText("Logged In")
+                self.close()
+            elif choice == False:
+                alert.setText("Error")
+            else:
+                pass
+            alert.exec()
     @funcTime
     def f1(self):
         print("hello")
@@ -171,9 +315,39 @@ class frontProcess:# PythonQT https://build-system.fman.io/pyqt5-tutorial
         pass
     def Payment():# Scan QR code on receipt.
         pass
+def main():
+    app = QApplication(sys.argv)
+    window = QWidget()
+    layout = QVBoxLayout()
+    cal = frontProcess.calendarPopup()
+    reg = frontProcess.Register()
+    Login = frontProcess.Login()
+    button = QPushButton('Register')
+    #button2 = QPushButton('Calendar')
+    button3 = QPushButton('Login')
+    #line = QLineEdit("Here")
+    #layout.addWidget(line)
+    def notification():
+        #alert = QMessageBox()
+        #alert.setText('You clicked the button!')
+        #alert.exec()
+        reg.show()
+    def calendar():
+        cal.show()
+    def login():
+        Login.show()
+    button.clicked.connect(notification)
+    #button2.clicked.connect(calendar)
+    button3.clicked.connect(login)
+    layout.addWidget(button)
+    #layout.addWidget(button2)
+    layout.addWidget(button3)
+    window.setLayout(layout)
+    window.show()
+    app.exec(app.exec_())
 if __name__ == "__main__":
-    backProcess.Book()
-    pass
+    main()
+
 
 
 #frontProcess.f1(0)
