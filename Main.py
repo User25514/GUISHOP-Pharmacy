@@ -332,7 +332,7 @@ def main():
         #alert.setText('You clicked the button!')
         #alert.exec()
         reg.show()
-    def calendar():
+    def calendar()*:
         cal.show()
     def login():
         Login.show()
