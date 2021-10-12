@@ -4,14 +4,14 @@ import sys
 from datetime import datetime
 import calendar
 from PyQt5.QtWidgets import *
-from PyQt5.QtCore import QDate
+from PyQt5.QtCore import QDate, QTimer
 import _thread
 data = {
     "Direction":"",
     "Register":{
         "Status":False,
         "Name":"",
-        "Date":"",
+        "Date":"Calendar",
         "Password":""
     },
     "Login":{
@@ -251,9 +251,12 @@ class frontProcess:# PythonQT https://build-system.fman.io/pyqt5-tutorial
                 cal.show()
             self.Calbutton = QPushButton(self)
             self.Calbutton.setText("Calendar")
-            self.Calbutton.move(200,60)
+            self.Calbutton.move(20,65)
             self.Calbutton.clicked.connect(calendar)
-
+            self.qTimer = QTimer()
+            self.qTimer.setInterval(1000)
+            
+            self.qTimer.timeout.connect(self.changename)
 
             self.label3 = QLabel(self)
             self.label3.setText("Email:")
@@ -275,7 +278,7 @@ class frontProcess:# PythonQT https://build-system.fman.io/pyqt5-tutorial
             self.button.setText("Approve")
             self.button.move(20,210)
             self.button.clicked.connect(self.notification)
-
+            self.qTimer.start()
         def notification(self):
             choice = backProcess.Register(self,self.Username.text(),self.DOB.text(),self.Email.text(),self.Password.text())
             alert = QMessageBox()
@@ -287,6 +290,9 @@ class frontProcess:# PythonQT https://build-system.fman.io/pyqt5-tutorial
             else:
                 pass
             alert.exec()
+        def changename(self):
+            print("Fuck")
+            self.Calbutton.setText(data["Register"]["Date"])
         
     class Login(QWidget):
         def __init__(self):
@@ -355,6 +361,7 @@ def main():
         cal.show()
     def login():
         Login.show()
+    
     button.clicked.connect(notification)
     button2.clicked.connect(calendar)
     button3.clicked.connect(login)
