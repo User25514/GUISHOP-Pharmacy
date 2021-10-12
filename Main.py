@@ -6,7 +6,20 @@ import calendar
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import QDate
 import _thread
-
+data = {
+    "Direction":"",
+    "Register":{
+        "Status":False,
+        "Name":"",
+        "Date":"",
+        "Password":""
+    },
+    "Login":{
+        "Status":False,
+        "Name":"",
+        "Date":""
+    }
+}
 def funcTime(func):
     def wrapper(*args,**kwargs):
         before = time.time()
@@ -138,11 +151,15 @@ class backProcess:
         d = self.REG.passwordVal(password)
         print(name,dob,email,password)
         print(a,b,c,d)
-        if (a and b and c and d) == False:
+        if (a or b or c or d) == False:
             return False
         else:
-            pass            
-        
+            pass
+        for row in self.cur.execute('SELECT * FROM Register ORDER BY name'):
+            print(row)
+            if row[2] == email:
+                self.con.close()
+                return False
         self.cur.execute(f"INSERT INTO Register VALUES ('{name}','{dob}','{email}','{password}')")
         self.con.commit()
         for row in self.cur.execute('SELECT * FROM Register ORDER BY name'):
@@ -199,14 +216,15 @@ class frontProcess:# PythonQT https://build-system.fman.io/pyqt5-tutorial
         def printDateInfo(self, qDate):
             self.qDate = qDate
             print('{0}/{1}/{2}'.format(qDate.month(), qDate.day(), qDate.year()))
-            print(f'Day Number of the year: {qDate.dayOfYear()}')
-            print(f'Day Number of the week: {qDate.dayOfWeek()}')
 
         def notification(self):
-                alert = QMessageBox()
+                #alert = QMessageBox()
                 print(self.qDate)
-                alert.setText('{0}/{1}/{2}'.format(self.qDate.month(), self.qDate.day(), self.qDate.year()))
-                alert.exec()
+                data[data["Direction"]]["Date"] = '{0}/{1}/{2}'.format(self.qDate.month(), self.qDate.day(), self.qDate.year())
+                
+                print(data)
+                #alert.setText('{0}/{1}/{2}'.format(self.qDate.month(), self.qDate.day(), self.qDate.year()))
+                #alert.exec()
                 self.close()
     class Register(QWidget):
         def __init__(self):
@@ -225,13 +243,16 @@ class frontProcess:# PythonQT https://build-system.fman.io/pyqt5-tutorial
             self.label2 = QLabel(self)
             self.label2.setText("DOB:")
             self.label2.move(20,50)
-            self.DOB = QLineEdit(self)
-            self.DOB.move(20,70)
-            
+            #self.DOB = QLineEdit(self)
+            #self.DOB.move(20,70)
+            cal = frontProcess.calendarPopup()
+            def calendar():
+                data["Direction"] = "Register"
+                cal.show()
             self.Calbutton = QPushButton(self)
-            self.Calbutton.setText("Approve")
-            self.Calbutton.move(20,210)
-            self.Calbutton.clicked.connect(self.calen)
+            self.Calbutton.setText("Calendar")
+            self.Calbutton.move(200,60)
+            self.Calbutton.clicked.connect(calendar)
 
 
             self.label3 = QLabel(self)
@@ -266,9 +287,7 @@ class frontProcess:# PythonQT https://build-system.fman.io/pyqt5-tutorial
             else:
                 pass
             alert.exec()
-        def calen(self):
-            cal = frontProcess.calendarPopup()
-            cal.show()
+        
     class Login(QWidget):
         def __init__(self):
             super().__init__()
@@ -323,7 +342,7 @@ def main():
     reg = frontProcess.Register()
     Login = frontProcess.Login()
     button = QPushButton('Register')
-    #button2 = QPushButton('Calendar')
+    button2 = QPushButton('Calendar')
     button3 = QPushButton('Login')
     #line = QLineEdit("Here")
     #layout.addWidget(line)
@@ -332,15 +351,15 @@ def main():
         #alert.setText('You clicked the button!')
         #alert.exec()
         reg.show()
-    def calendar()*:
+    def calendar():
         cal.show()
     def login():
         Login.show()
     button.clicked.connect(notification)
-    #button2.clicked.connect(calendar)
+    button2.clicked.connect(calendar)
     button3.clicked.connect(login)
     layout.addWidget(button)
-    #layout.addWidget(button2)
+    layout.addWidget(button2)
     layout.addWidget(button3)
     window.setLayout(layout)
     window.show()
