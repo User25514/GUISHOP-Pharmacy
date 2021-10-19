@@ -8,16 +8,17 @@ class backProcess:
         self.cur = self.con.cursor()
         try:
             self.cur.execute("CREATE TABLE Register (name,dob,email,password)")
+            self.cur.execute("CREATE TABLE Bookings (email,date)")
             self.con.commit()
         except:
             pass
-    def Book():#[1][2] Books a free date/timeslot
+    def Book(self,email,date):#[1][2] Books a free date/timeslot
         self.REG = dataValidation.Register
         self.con = sqlite3.connect('database.db')
         self.cur = self.con.cursor()
-        self.cur.execute(f"INSERT INTO Register VALUES ('{name}','{dob}','{email}','{password}')")
+        self.cur.execute(f"INSERT INTO Bookings VALUES ('{date}','{email}')")
         self.con.commit()
-        for row in self.cur.execute('SELECT * FROM Register ORDER BY name'):
+        for row in self.cur.execute('SELECT * FROM Bookings ORDER BY date'):
             print(row)
 
         self.con.close()
