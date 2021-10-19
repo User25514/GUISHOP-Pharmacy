@@ -82,7 +82,7 @@ class frontProcess:# PythonQT https://build-system.fman.io/pyqt5-tutorial
         def __init__(self):
             super().__init__()
             self.setWindowTitle('Register')
-            self.setGeometry(300, 300, 350, 250)
+            self.setGeometry(500, 500, 350, 250)
             self.initUI()
             #_thread.start_new_thread(backProcess.MultiThread.DateCheck, (DateCheck,))
         def initUI(self):
@@ -156,7 +156,7 @@ class frontProcess:# PythonQT https://build-system.fman.io/pyqt5-tutorial
             reg = frontProcess.Register()
             self.label1 = QLabel(self)
             self.label1.setText("DOB:")
-            self.label1.move(20,10)
+            self.label1.move(75,10)
             #self.DOB = QLineEdit(self)
             #self.DOB.move(20,30)
             cal = frontProcess.calendarPopup()
@@ -165,7 +165,7 @@ class frontProcess:# PythonQT https://build-system.fman.io/pyqt5-tutorial
                 cal.show()
             self.CalLoginbutton = QPushButton(self)
             self.CalLoginbutton.setText("Calendar")
-            self.CalLoginbutton.move(20,30)
+            self.CalLoginbutton.move(50,25)
             self.CalLoginbutton.clicked.connect(calendar)
 
             self.qTimer = QTimer()
@@ -175,7 +175,7 @@ class frontProcess:# PythonQT https://build-system.fman.io/pyqt5-tutorial
 
             self.label4 = QLabel(self)
             self.label4.setText("Password:")
-            self.label4.move(20,50)
+            self.label4.move(60,50)
             self.Password = QLineEdit(self)
             self.Password.move(20,70)
             self.Password.setEchoMode(QLineEdit.Password)
@@ -212,7 +212,7 @@ class frontProcess:# PythonQT https://build-system.fman.io/pyqt5-tutorial
                 pass
             alert.exec()
         def changeName(self):
-            self.CalLoginbutton.setText(data["Register"]["Date"])
+            self.CalLoginbutton.setText(data["Login"]["Date"])
     @funcTime
     def f1(self):
         print("hello")
@@ -262,3 +262,4 @@ if __name__ == "__main__":
 #rem.Register()
 #rem.Register()
 #rem.Login()
+# https://youtu.be/82v2ZR-g6wY
