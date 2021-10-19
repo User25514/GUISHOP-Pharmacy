@@ -190,6 +190,70 @@ class frontProcess:# PythonQT https://build-system.fman.io/pyqt5-tutorial
             self.label5.move(80,130)
             
             def register():
+                reg.show()
+                self.close()
+            self.button = QPushButton(self)
+            self.button.setText("Register")
+            self.button.move(50,150)
+            self.button.clicked.connect(register)
+
+        def notification(self):
+            choice = backProcess.Login(self,data["Login"]["Date"],self.Password.text())
+            alert = QMessageBox()
+            if choice == True:
+                Book = frontProcess.Book()
+                Book.show()
+                self.close()
+            else:
+                alert = QMessageBox()
+                alert.setText("Error")
+                alert.exec()
+        def changeName(self):
+            self.CalLoginbutton.setText(data["Login"]["Date"])
+    class Book(QWidget):
+        def __init__(self):
+            super().__init__()
+            self.setWindowTitle('Booking')
+            self.setGeometry(500, 500, 1000, 1000)
+            self.initUI()
+        def initUI(self):
+            reg = frontProcess.Register()
+            self.label1 = QLabel(self)
+            self.label1.setText("WOWWWW:")
+            self.label1.move(75,10)
+            #self.DOB = QLineEdit(self)
+            #self.DOB.move(20,30)
+            cal = frontProcess.calendarPopup()
+            def calendar():
+                data["Direction"] = "Login"
+                cal.show()
+            self.CalLoginbutton = QPushButton(self)
+            self.CalLoginbutton.setText("Calendar")
+            self.CalLoginbutton.move(50,25)
+            self.CalLoginbutton.clicked.connect(calendar)
+
+            self.qTimer = QTimer()
+            self.qTimer.setInterval(1000)
+            self.qTimer.timeout.connect(self.changeName)
+            self.qTimer.start()
+
+            self.label4 = QLabel(self)
+            self.label4.setText("Password:")
+            self.label4.move(60,50)
+            self.Password = QLineEdit(self)
+            self.Password.move(20,70)
+            self.Password.setEchoMode(QLineEdit.Password)
+
+            self.button = QPushButton(self)
+            self.button.setText("Login")
+            self.button.move(50,100)
+            self.button.clicked.connect(self.notification)
+
+            self.label5 = QLabel(self)
+            self.label5.setText("Or")
+            self.label5.move(80,130)
+            
+            def register():
                 #alert = QMessageBox()
                 #alert.setText('You clicked the button!')
                 #alert.exec()
