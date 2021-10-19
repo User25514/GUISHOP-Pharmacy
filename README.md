@@ -1,8 +1,8 @@
 # GUISHOP-Pharmacy
 Basic Features:
-Must allow login via name, date of birth, email and password. (password must be checked) 
+[]Must allow login via name, date of birth, email and password. (password must be checked) 
 
-An option to allow for login via date of birth and password.
+[]An option to allow for login via date of birth and password.
 
 User can book a free date/timeslot.
 

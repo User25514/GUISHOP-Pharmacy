@@ -17,6 +17,10 @@ data = {
     },
     "Login":{
         "Status":False,
+        "Date":"Calendar"
+    },
+    "Book":{
+        "Status":False,
         "Name":"",
         "Date":"Calendar"
     }
@@ -37,7 +41,10 @@ class frontProcess:# PythonQT https://build-system.fman.io/pyqt5-tutorial
         def __init__(self):
             super().__init__()
             self.setWindowTitle('Calendar Demo')
-            self.setGeometry(300, 300, 350, 250)
+            if (data["Register"]["Status"] or data["Login"]["Status"]) == True:
+                self.setGeometry(300, 300, 1000, 1000)
+            else:
+                self.setGeometry(300, 300, 350, 250)
             self.initUI()
         def initUI(self):
             self.calendar = QCalendarWidget(self)
@@ -68,6 +75,7 @@ class frontProcess:# PythonQT https://build-system.fman.io/pyqt5-tutorial
         def printDateInfo(self, qDate):
             self.qDate = qDate
             print('{0}/{1}/{2}'.format(qDate.month(), qDate.day(), qDate.year()))
+            
 
         def notification(self):
                 #alert = QMessageBox()
@@ -201,6 +209,9 @@ class frontProcess:# PythonQT https://build-system.fman.io/pyqt5-tutorial
             choice = backProcess.Login(self,data["Login"]["Date"],self.Password.text())
             alert = QMessageBox()
             if choice == True:
+                data[data["Direction"]]["Status"] = True
+                data["Direction"] = "Book"
+                print(data)
                 Book = frontProcess.Book()
                 Book.show()
                 self.close()
@@ -214,7 +225,7 @@ class frontProcess:# PythonQT https://build-system.fman.io/pyqt5-tutorial
         def __init__(self):
             super().__init__()
             self.setWindowTitle('Booking')
-            self.setGeometry(500, 500, 1000, 1000)
+            self.setGeometry(500, 500, 500, 500)
             self.initUI()
         def initUI(self):
             reg = frontProcess.Register()

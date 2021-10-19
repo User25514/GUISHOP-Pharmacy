@@ -12,6 +12,15 @@ class backProcess:
         except:
             pass
     def Book():#[1][2] Books a free date/timeslot
+        self.REG = dataValidation.Register
+        self.con = sqlite3.connect('database.db')
+        self.cur = self.con.cursor()
+        self.cur.execute(f"INSERT INTO Register VALUES ('{name}','{dob}','{email}','{password}')")
+        self.con.commit()
+        for row in self.cur.execute('SELECT * FROM Register ORDER BY name'):
+            print(row)
+
+        self.con.close()
         pass
     def ShopState():#[2][3] Choice to shop in person or thorough the application.
         pass
