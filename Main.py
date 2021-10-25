@@ -326,6 +326,7 @@ def main():
     layout.addWidget(button)
     layout.addWidget(button2)
     layout.addWidget(button3)
+    #layout.itemAt(2).widget().deleteLater()
     window.setLayout(layout)
     window.show()
     app.exec(app.exec_())
