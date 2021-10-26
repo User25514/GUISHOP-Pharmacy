@@ -34,7 +34,7 @@ class backProcess:
         pass
     def Register(self,name,dob,email,password):#[5] Make Account
         #[6];
-        print(f"{name}, {dob}, {email}, {password}")
+        #print(f"{name}, {dob}, {email}, {password}")
         REG = dataValidation.Register
         con = sqlite3.connect('database.db')
         cur = con.cursor()
@@ -43,13 +43,13 @@ class backProcess:
         c = REG.emailVal(email)
         d = REG.passwordVal(password)
         RegID = 0
-        print(a,b,c,d)
+        #print(a,b,c,d)
         if (a or b or c or d) == False:
             return False
         else:
             pass
         for row in cur.execute('SELECT * FROM Register ORDER BY RegID'):
-            print(row)
+            #print(row)
             RegID = row[0]
             row[3]
             if row[3] == email:
@@ -57,8 +57,8 @@ class backProcess:
                 return False
         cur.execute(f"INSERT INTO Register VALUES ('{int(RegID)+1}','{name}','{dob}','{email}','{password}')")
         con.commit()
-        for row in cur.execute('SELECT * FROM Register ORDER BY RegID'):
-            print(row)
+        #for row in cur.execute('SELECT * FROM Register ORDER BY RegID'):
+            #print(row)
 
         con.close()
         return True
@@ -67,7 +67,7 @@ class backProcess:
         con = sqlite3.connect('database.db')
         cur = con.cursor()
         for row in cur.execute('SELECT * FROM Register ORDER BY name'):
-            print(row)
+            #print(row)
             if row[4] == password and row[2] == dob:
                 con.close()
                 return True

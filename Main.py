@@ -320,17 +320,8 @@ def main():
     layout.addWidget(button4)
     button4.clicked.connect(change)
     button5.clicked.connect(change2)
-    #Login.addWidget(button5)
-    #layout.itemAt(2).widget().deleteLater()
     window.setLayout(layout)
     window.show()
     app.exec(app.exec_())
 if __name__ == "__main__":
     main()
-#frontProcess.f1(0)
-#Test.Val()
-#rem = backProcess()
-#rem.Register()
-#rem.Register()
-#rem.Login()
-# https://youtu.be/82v2ZR-g6wY
