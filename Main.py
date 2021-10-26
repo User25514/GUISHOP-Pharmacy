@@ -5,8 +5,8 @@ import calendar
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import QDate, QTimer
 import _thread
-from mainValidation import dataValidation
-from mainBack import backProcess
+import mainBack
+backProcess = mainBack.backProcess()
 data = {
     "Direction":"",
     "Register":{
@@ -25,15 +25,6 @@ data = {
         "Date":"Calendar"
     }
 }
-def funcTime(func):
-    def wrapper(*args,**kwargs):
-        before = time.time()
-        val = func(*args,**kwargs)
-        print(f"Ended: {time.time() - before} Seconds")
-        return val
-
-    return wrapper
-
 class frontProcess:# PythonQT https://build-system.fman.io/pyqt5-tutorial
     def __init__(self):
         pass
@@ -70,157 +61,142 @@ class frontProcess:# PythonQT https://build-system.fman.io/pyqt5-tutorial
                 self.calendar.setMinimumDate(QDate(Year-100, Month, Day))
                 self.calendar.setMaximumDate(QDate(Year-18, Month, Day))
             self.calendar.setSelectedDate(QDate(Year, Month, 1))
-            self.calendar.clicked.connect(self.printDateInfo)
-
-        def printDateInfo(self, qDate):
-            self.qDate = qDate
-            print('{0}/{1}/{2}'.format(qDate.month(), qDate.day(), qDate.year()))
-            
 
         def notification(self):
-                #alert = QMessageBox()
-                print(self.qDate)
                 data[data["Direction"]]["Date"] = '{0}/{1}/{2}'.format(self.qDate.month(), self.qDate.day(), self.qDate.year())
-                
-                print(data)
-                #alert.setText('{0}/{1}/{2}'.format(self.qDate.month(), self.qDate.day(), self.qDate.year()))
-                #alert.exec()
                 self.close()
     class Register(QWidget):
-        def __init__(self):
-            super().__init__()
-            self.setWindowTitle('Register')
-            self.setGeometry(500, 500, 350, 250)
-            self.initUI()
-            #_thread.start_new_thread(backProcess.MultiThread.DateCheck, (DateCheck,))
         def initUI(self):
-            self.label1 = QLabel(self)
-            self.label1.setText("Name:")
-            self.label1.move(20,10)
-            self.Username = QLineEdit(self)
-            self.Username.move(20,30)
+            layout = QVBoxLayout()
+            label1 = QLabel()
+            label1.setText("Name:")
+            Username = QLineEdit()
 
-            self.label2 = QLabel(self)
-            self.label2.setText("DOB:")
-            self.label2.move(20,50)
-            #self.DOB = QLineEdit(self)
-            #self.DOB.move(20,70)
+            label2 = QLabel()
+            label2.setText("DOB:")
             cal = frontProcess.calendarPopup()
             def calendar():
                 data["Direction"] = "Register"
+                qTimer.start()
                 cal.show()
-            self.Calbutton = QPushButton(self)
-            self.Calbutton.setText("Calendar")
-            self.Calbutton.move(20,65)
-            self.Calbutton.clicked.connect(calendar)
-
-            self.qTimer = QTimer()
-            self.qTimer.setInterval(1000)
-            self.qTimer.timeout.connect(self.changename)
-            self.qTimer.start()
-
-            self.label3 = QLabel(self)
-            self.label3.setText("Email:")
-            self.label3.move(20,90)
-            self.Email = QLineEdit(self)
-            self.Email.move(20,110)
-
-            self.label4 = QLabel(self)
-            self.label4.setText("Password:")
-            self.label4.move(20,130)
-            self.Password = QLineEdit(self)
-            self.Password.move(20,150)
-            self.Password.setEchoMode(QLineEdit.Password)
-            self.label5 = QLabel(self)
-            self.label5.setText("Must contain 2 capital letters\n1 number\nbetween 8 and 15 characters long.")
-            self.label5.move(170,133)
-
-            self.button = QPushButton(self)
-            self.button.setText("Approve")
-            self.button.move(20,210)
-            self.button.clicked.connect(self.notification)
+            Calbutton = QPushButton()
+            Calbutton.setText("Calendar")
+            Calbutton.clicked.connect(calendar)
+            def changename():
+                Calbutton.setText(data["Register"]["Date"])
+            qTimer = QTimer()
+            qTimer.setInterval(1000)
+            qTimer.timeout.connect(changename)
             
-        def notification(self):
-            choice = backProcess.Register(self,self.Username.text(),data["Register"]["Date"],self.Email.text(),self.Password.text())
-            alert = QMessageBox()
-            if choice == True:
-                alert.setText("Registered")
-                self.close()
-            elif choice == False:
-                alert.setText("Error")
-            else:
-                pass
-            alert.exec()
-        def changename(self):
-            self.Calbutton.setText(data["Register"]["Date"])
+            label3 = QLabel()
+            label3.setText("Email:")
+            Email = QLineEdit()
+            label4 = QLabel()
+            label4.setText("Password:")
+            Password = QLineEdit()
+            Password.setEchoMode(QLineEdit.Password)
+            label5 = QLabel()
+            label5.setText("Must contain 2 capital letters\n1 number\nbetween 8 and 15 characters long.")
+            def notification():
+                choice = backProcess.Register(Username.text(),data["Register"]["Date"],Email.text(),Password.text())
+                alert = QMessageBox()
+                if choice == True:
+                    alert.setText("Registered")
+                    data["Register"] = {
+                        "Status":True,
+                        "Name":"",
+                        "Date":"Calendar",
+                        "Password":""
+                    }
+                elif choice == False:
+                    alert.setText("Error")
+                else:
+                    pass
+                alert.exec()
+            button1 = QPushButton()
+            button1.setText("Approve")
+            button1.clicked.connect(notification)
+            layout.addWidget(label1)
+            layout.addWidget(Username)
+            layout.addWidget(label2)
+            layout.addWidget(Calbutton)
+            layout.addWidget(label3)
+            layout.addWidget(Email)
+            layout.addWidget(label4)
+            layout.addWidget(Password)
+            layout.addWidget(label5)
+            layout.addWidget(button1)
+            return layout
         
     class Login(QWidget):
-        def __init__(self):
-            super().__init__()
-            self.setWindowTitle('Login')
-            self.setGeometry(500, 500, 200, 200)
-            self.initUI()
         def initUI(self):
-            reg = frontProcess.Register()
-            self.label1 = QLabel(self)
-            self.label1.setText("DOB:")
-            self.label1.move(75,10)
-            #self.DOB = QLineEdit(self)
-            #self.DOB.move(20,30)
+            layout = QVBoxLayout()
+            reg = frontProcess.Register.initUI(0)
+            label1 = QLabel()
+            label1.setText("DOB:")
+            label1.move(75,10)
             cal = frontProcess.calendarPopup()
             def calendar():
                 data["Direction"] = "Login"
+                qTimer.start()
                 cal.show()
-            self.CalLoginbutton = QPushButton(self)
-            self.CalLoginbutton.setText("Calendar")
-            self.CalLoginbutton.move(50,25)
-            self.CalLoginbutton.clicked.connect(calendar)
+            CalLoginbutton = QPushButton()
+            CalLoginbutton.setText("Calendar")
+            CalLoginbutton.move(50,25)
+            CalLoginbutton.clicked.connect(calendar)
+            def changeName():
+                CalLoginbutton.setText(data["Login"]["Date"])
+            qTimer = QTimer()
+            qTimer.setInterval(1000)
+            qTimer.timeout.connect(changeName)
 
-            self.qTimer = QTimer()
-            self.qTimer.setInterval(1000)
-            self.qTimer.timeout.connect(self.changeName)
-            self.qTimer.start()
+            label2 = QLabel()
+            label2.setText("Password:")
+            label2.move(60,50)
+            Password = QLineEdit()
+            Password.move(20,70)
+            Password.setEchoMode(QLineEdit.Password)
+            def notification(elf):
+                choice = backProcess.Login(data["Login"]["Date"],Password.text())
+                alert = QMessageBox()
+                if choice == True:
+                    data[data["Direction"]]["Status"] = True
+                    data["Direction"] = "Book"
+                    print(data)
+                    Book = frontProcess.Book()
+                    Book.show()
+                else:
+                    alert = QMessageBox()
+                    alert.setText("Error")
+                    alert.exec()
+            button1 = QPushButton()
+            button1.setText("Login")
+            button1.move(50,100)
+            button1.clicked.connect(notification)
 
-            self.label4 = QLabel(self)
-            self.label4.setText("Password:")
-            self.label4.move(60,50)
-            self.Password = QLineEdit(self)
-            self.Password.move(20,70)
-            self.Password.setEchoMode(QLineEdit.Password)
-
-            self.button = QPushButton(self)
-            self.button.setText("Login")
-            self.button.move(50,100)
-            self.button.clicked.connect(self.notification)
-
-            self.label5 = QLabel(self)
-            self.label5.setText("Or")
-            self.label5.move(80,130)
+            label3 = QLabel()
+            label3.setText("Or")
+            label3.move(80,130)
             
             def register():
-                reg.show()
-                self.close()
-            self.button = QPushButton(self)
-            self.button.setText("Register")
-            self.button.move(50,150)
-            self.button.clicked.connect(register)
-
-        def notification(self):
-            choice = backProcess.Login(self,data["Login"]["Date"],self.Password.text())
-            alert = QMessageBox()
-            if choice == True:
-                data[data["Direction"]]["Status"] = True
-                data["Direction"] = "Book"
-                print(data)
-                Book = frontProcess.Book()
-                Book.show()
-                self.close()
-            else:
-                alert = QMessageBox()
-                alert.setText("Error")
-                alert.exec()
-        def changeName(self):
-            self.CalLoginbutton.setText(data["Login"]["Date"])
+                try:
+                    for x in range(0,10):
+                        layout.itemAt(x).widget().deleteLater()
+                except:
+                    pass
+                layout.addLayout(reg)
+            button2 = QPushButton()
+            button2.setText("Register")
+            button2.move(50,150)
+            button2.clicked.connect(register)
+            layout.addWidget(label1)
+            layout.addWidget(CalLoginbutton)
+            layout.addWidget(label2)
+            layout.addWidget(Password)
+            layout.addWidget(button1)
+            layout.addWidget(label3)
+            layout.addWidget(button2)
+            return layout
     class Book(QWidget):
         def __init__(self):
             super().__init__()
@@ -288,9 +264,6 @@ class frontProcess:# PythonQT https://build-system.fman.io/pyqt5-tutorial
             alert.exec()
         def changeName(self):
             self.CalLoginbutton.setText(data["Login"]["Date"])
-    @funcTime
-    def f1(self):
-        print("hello")
     def BookNotification():#[1] Confirmatin to the user that the slot was booked successfully.
         pass
     def Shop():#[3][4][5] Browse medicines of the cargories provided.
@@ -302,12 +275,16 @@ def main():
     app = QApplication(sys.argv)
     window = QWidget()
     layout = QVBoxLayout()
+    Login = frontProcess.Login.initUI(0)
+    register = frontProcess.Register.initUI(0)
     cal = frontProcess.calendarPopup()
     reg = frontProcess.Register()
-    Login = frontProcess.Login()
+    #Login = frontProcess.Login()
     button = QPushButton('Register')
     button2 = QPushButton('Calendar')
     button3 = QPushButton('Login')
+    button4 = QPushButton('Change')
+    button5 = QPushButton('Change2')
     #line = QLineEdit("Here")
     #layout.addWidget(line)
     def notification():
@@ -319,13 +296,31 @@ def main():
         cal.show()
     def login():
         Login.show()
-    Login.show()
+    def change():
+        try:
+            for x in range(0,5):
+                layout.itemAt(x).widget().deleteLater()
+        except:
+            pass
+        layout.addLayout(Login)
+    def change2():
+        try:
+            for x in range(0,10):
+                layout.itemAt(x).widget().deleteLater()
+        except:
+            pass
+        layout.addLayout(register)
+    #Login.show()
     button.clicked.connect(notification)
     button2.clicked.connect(calendar)
     button3.clicked.connect(login)
     layout.addWidget(button)
     layout.addWidget(button2)
     layout.addWidget(button3)
+    layout.addWidget(button4)
+    button4.clicked.connect(change)
+    button5.clicked.connect(change2)
+    #Login.addWidget(button5)
     #layout.itemAt(2).widget().deleteLater()
     window.setLayout(layout)
     window.show()

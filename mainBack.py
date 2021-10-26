@@ -4,14 +4,18 @@ from mainValidation import dataValidation
 class backProcess:
     def __init__(self):
         self.REG = dataValidation.Register
+        print("CHEK")
         self.con = sqlite3.connect('database.db')
         self.cur = self.con.cursor()
         try:
-            self.cur.execute("CREATE TABLE Register (name,dob,email,password)")
-            self.cur.execute("CREATE TABLE Bookings (email,date)")
+            self.cur.execute("CREATE TABLE Register (RegID,name,dob,email,password)")
+            self.cur.execute("CREATE TABLE Bookings (BookID,RegIDFK,dateTime)")
+            self.cur.execute("CREATE TABLE Medication (MedID,Name,Price,Quantity)")
+            self.cur.execute("CREATE TABLE Medication (MedID,Name,Price,Quantity)")
             self.con.commit()
         except:
             pass
+        self.con.close()
     def Book(self,email,date):#[1][2] Books a free date/timeslot
         self.REG = dataValidation.Register
         self.con = sqlite3.connect('database.db')
@@ -30,44 +34,45 @@ class backProcess:
         pass
     def Register(self,name,dob,email,password):#[5] Make Account
         #[6];
-        self.REG = dataValidation.Register
-        self.con = sqlite3.connect('database.db')
-        self.cur = self.con.cursor()
-        a = self.REG.nameVal(name)
-        b = self.REG.dobVal(dob)
-        c = self.REG.emailVal(email)
-        d = self.REG.passwordVal(password)
-        print(name,dob,email,password)
+        print(f"{name}, {dob}, {email}, {password}")
+        REG = dataValidation.Register
+        con = sqlite3.connect('database.db')
+        cur = con.cursor()
+        a = REG.nameVal(name)
+        b = REG.dobVal(dob)
+        c = REG.emailVal(email)
+        d = REG.passwordVal(password)
+        RegID = 0
         print(a,b,c,d)
         if (a or b or c or d) == False:
             return False
         else:
             pass
-        for row in self.cur.execute('SELECT * FROM Register ORDER BY name'):
+        for row in cur.execute('SELECT * FROM Register ORDER BY RegID'):
             print(row)
-            if row[2] == email:
-                self.con.close()
+            RegID = row[0]
+            row[3]
+            if row[3] == email:
+                con.close()
                 return False
-        self.cur.execute(f"INSERT INTO Register VALUES ('{name}','{dob}','{email}','{password}')")
-        self.con.commit()
-        for row in self.cur.execute('SELECT * FROM Register ORDER BY name'):
+        cur.execute(f"INSERT INTO Register VALUES ('{int(RegID)+1}','{name}','{dob}','{email}','{password}')")
+        con.commit()
+        for row in cur.execute('SELECT * FROM Register ORDER BY RegID'):
             print(row)
 
-        self.con.close()
+        con.close()
         return True
-        pass
     def Login(self,dob,password):#[5] login
         #[7]
-        self.con = sqlite3.connect('database.db')
-        self.cur = self.con.cursor()
-        for row in self.cur.execute('SELECT * FROM Register ORDER BY name'):
+        con = sqlite3.connect('database.db')
+        cur = con.cursor()
+        for row in cur.execute('SELECT * FROM Register ORDER BY name'):
             print(row)
-            if row[3] == password and row[1] == dob:
-                self.con.close()
+            if row[4] == password and row[2] == dob:
+                con.close()
                 return True
-        self.con.close()
+        con.close()
         return False
-        pass
     class MultiThread():
         def DateCheck(DateDic):
             pass
