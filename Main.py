@@ -69,6 +69,7 @@ class frontProcess:# PythonQT https://build-system.fman.io/pyqt5-tutorial
         def initUI(self):
             layout = QVBoxLayout()
             label1 = QLabel()
+            
             label1.setText("Name:")
             Username = QLineEdit()
 
@@ -108,6 +109,13 @@ class frontProcess:# PythonQT https://build-system.fman.io/pyqt5-tutorial
                         "Date":"Calendar",
                         "Password":""
                     }
+                    Login = frontProcess.Login.initUI(0)
+                    try:
+                        for x in range(0,10):
+                            layout.itemAt(x).widget().deleteLater()
+                    except:
+                        pass
+                    layout.addLayout(Login)
                 elif choice == False:
                     alert.setText("Error")
                 else:
@@ -197,73 +205,7 @@ class frontProcess:# PythonQT https://build-system.fman.io/pyqt5-tutorial
             layout.addWidget(label3)
             layout.addWidget(button2)
             return layout
-    class Book(QWidget):
-        def __init__(self):
-            super().__init__()
-            self.setWindowTitle('Booking')
-            self.setGeometry(500, 500, 500, 500)
-            self.initUI()
-        def initUI(self):
-            reg = frontProcess.Register()
-            self.label1 = QLabel(self)
-            self.label1.setText("WOWWWW:")
-            self.label1.move(75,10)
-            #self.DOB = QLineEdit(self)
-            #self.DOB.move(20,30)
-            cal = frontProcess.calendarPopup()
-            def calendar():
-                data["Direction"] = "Login"
-                cal.show()
-            self.CalLoginbutton = QPushButton(self)
-            self.CalLoginbutton.setText("Calendar")
-            self.CalLoginbutton.move(50,25)
-            self.CalLoginbutton.clicked.connect(calendar)
-
-            self.qTimer = QTimer()
-            self.qTimer.setInterval(1000)
-            self.qTimer.timeout.connect(self.changeName)
-            self.qTimer.start()
-
-            self.label4 = QLabel(self)
-            self.label4.setText("Password:")
-            self.label4.move(60,50)
-            self.Password = QLineEdit(self)
-            self.Password.move(20,70)
-            self.Password.setEchoMode(QLineEdit.Password)
-
-            self.button = QPushButton(self)
-            self.button.setText("Login")
-            self.button.move(50,100)
-            self.button.clicked.connect(self.notification)
-
-            self.label5 = QLabel(self)
-            self.label5.setText("Or")
-            self.label5.move(80,130)
-            
-            def register():
-                #alert = QMessageBox()
-                #alert.setText('You clicked the button!')
-                #alert.exec()
-                reg.show()
-                self.close()
-            self.button = QPushButton(self)
-            self.button.setText("Register")
-            self.button.move(50,150)
-            self.button.clicked.connect(register)
-
-        def notification(self):
-            choice = backProcess.Login(self,self.DOB.text(),self.Password.text())
-            alert = QMessageBox()
-            if choice == True:
-                alert.setText("Logged In")
-                self.close()
-            elif choice == False:
-                alert.setText("Error")
-            else:
-                pass
-            alert.exec()
-        def changeName(self):
-            self.CalLoginbutton.setText(data["Login"]["Date"])
+    
     def BookNotification():#[1] Confirmatin to the user that the slot was booked successfully.
         pass
     def Shop():#[3][4][5] Browse medicines of the cargories provided.
@@ -285,12 +227,7 @@ def main():
     button3 = QPushButton('Login')
     button4 = QPushButton('Change')
     button5 = QPushButton('Change2')
-    #line = QLineEdit("Here")
-    #layout.addWidget(line)
     def notification():
-        #alert = QMessageBox()
-        #alert.setText('You clicked the button!')
-        #alert.exec()
         reg.show()
     def calendar():
         cal.show()
