@@ -61,9 +61,21 @@ class frontProcess:# PythonQT https://build-system.fman.io/pyqt5-tutorial
                 self.calendar.setMinimumDate(QDate(Year-100, Month, Day))
                 self.calendar.setMaximumDate(QDate(Year-18, Month, Day))
             self.calendar.setSelectedDate(QDate(Year, Month, 1))
+            self.calendar.clicked.connect(self.printDateInfo)
+
+        def printDateInfo(self, qDate):
+            self.qDate = qDate
+            #print('{0}/{1}/{2}'.format(qDate.month(), qDate.day(), qDate.year()))
+            
 
         def notification(self):
+                #alert = QMessageBox()
+                #print(self.qDate)
                 data[data["Direction"]]["Date"] = '{0}/{1}/{2}'.format(self.qDate.month(), self.qDate.day(), self.qDate.year())
+                
+                #print(data)
+                #alert.setText('{0}/{1}/{2}'.format(self.qDate.month(), self.qDate.day(), self.qDate.year()))
+                #alert.exec()
                 self.close()
     class Register(QWidget):
         def initUI(self):
