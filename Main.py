@@ -96,16 +96,14 @@ def main():
         except:
             pass
         #layout.addLayout()
-    logLabel1 = QLabel()
-    logLabel1.setText("DOB:")
+    logLabel1 = QLabel("DOB: ")
     logLabel1.move(75,10)
     cal = frontProcess.calendarPopup()
     def logCalendar():
         data["Direction"] = "Login"
         qTimer.start()
         cal.show()
-    LogCalLoginbutton = QPushButton()
-    LogCalLoginbutton.setText("Calendar")
+    LogCalLoginbutton = QPushButton("Calendar")
     LogCalLoginbutton.move(50,25)
     LogCalLoginbutton.clicked.connect(logCalendar)
     def changeName():
@@ -120,8 +118,7 @@ def main():
     qTimer.setInterval(1000)
     qTimer.timeout.connect(changeName)
 
-    logLabel2 = QLabel()
-    logLabel2.setText("Password:")
+    logLabel2 = QLabel("Password: ")
     logLabel2.move(60,50)
     logPassword = QLineEdit()
     logPassword.move(20,70)
@@ -140,35 +137,28 @@ def main():
             alert = QMessageBox()
             alert.setText("Error")
             alert.exec()
-    logButton1 = QPushButton()
-    logButton1.setText("Login")
+    logButton1 = QPushButton("Login")
     logButton1.move(50,100)
     logButton1.clicked.connect(logNotification)
 
     #Register:
-    regLabel1 = QLabel()
-    regLabel1.setText("Name:")
+    regLabel1 = QLabel("Name: ")
     regUsername = QLineEdit()
-    regLabel2 = QLabel()
-    regLabel2.setText("DOB:")
+    regLabel2 = QLabel("DOB: ")
     def regCalendar():
         data["Direction"] = "Register"
         qTimer.start()
         cal.show()
-    regCalbutton = QPushButton()
-    regCalbutton.setText("Calendar")
+    regCalbutton = QPushButton("Calendar")
     regCalbutton.clicked.connect(regCalendar)
 
     
-    regLabel3 = QLabel()
-    regLabel3.setText("Email:")
+    regLabel3 = QLabel("Email: ")
     regEmail = QLineEdit()
-    regLabel4 = QLabel()
-    regLabel4.setText("Password:")
+    regLabel4 = QLabel("Password: ")
     regPassword = QLineEdit()
     regPassword.setEchoMode(QLineEdit.Password)
-    regLabel5 = QLabel()
-    regLabel5.setText("Must contain 2 capital letters\n1 number\nbetween 8 and 15 characters long.")
+    regLabel5 = QLabel("Must contain 2 capital letters\n1 number\nbetween 8 and 15 characters long.")
     def regNotification():
         choice = backProcess.Register(regUsername.text(),data["Register"]["Date"],regEmail.text(),regPassword.text())
         print(choice)
@@ -187,8 +177,7 @@ def main():
         else:
             pass
         alert.exec()
-    regButton1 = QPushButton()
-    regButton1.setText("Approve")
+    regButton1 = QPushButton("Approve")
     regButton1.clicked.connect(regNotification)
     #Login Stuff
     layout.addWidget(QLabel("Login: "),0,0)
