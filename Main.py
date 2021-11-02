@@ -12,12 +12,12 @@ data = {
     "Register":{
         "Status":False,
         "Name":"",
-        "Date":"Calendar",
+        "Date":"",
         "Password":""
     },
     "Login":{
         "Status":False,
-        "Date":"Calendar"
+        "Date":""
     },
     "Book":{
         "Status":False,
@@ -77,77 +77,6 @@ class frontProcess:# PythonQT https://build-system.fman.io/pyqt5-tutorial
                 #alert.setText('{0}/{1}/{2}'.format(self.qDate.month(), self.qDate.day(), self.qDate.year()))
                 #alert.exec()
                 self.close()
-    class Register(QWidget):
-        def initUI(self):
-            layout = QVBoxLayout()
-            label1 = QLabel()
-            
-            label1.setText("Name:")
-            Username = QLineEdit()
-
-            label2 = QLabel()
-            label2.setText("DOB:")
-            cal = frontProcess.calendarPopup()
-            def calendar():
-                data["Direction"] = "Register"
-                qTimer.start()
-                cal.show()
-            Calbutton = QPushButton()
-            Calbutton.setText("Calendar")
-            Calbutton.clicked.connect(calendar)
-            def changename():
-                Calbutton.setText(data["Register"]["Date"])
-            qTimer = QTimer()
-            qTimer.setInterval(1000)
-            qTimer.timeout.connect(changename)
-            
-            label3 = QLabel()
-            label3.setText("Email:")
-            Email = QLineEdit()
-            label4 = QLabel()
-            label4.setText("Password:")
-            Password = QLineEdit()
-            Password.setEchoMode(QLineEdit.Password)
-            label5 = QLabel()
-            label5.setText("Must contain 2 capital letters\n1 number\nbetween 8 and 15 characters long.")
-            def notification():
-                choice = backProcess.Register(Username.text(),data["Register"]["Date"],Email.text(),Password.text())
-                alert = QMessageBox()
-                if choice == True:
-                    alert.setText("Registered")
-                    data["Register"] = {
-                        "Status":True,
-                        "Name":"",
-                        "Date":"Calendar",
-                        "Password":""
-                    }
-                    Login = frontProcess.Login.initUI(0)
-                    try:
-                        for x in range(0,10):
-                            layout.itemAt(x).widget().deleteLater()
-                    except:
-                        pass
-                    layout.addLayout(Login)
-                elif choice == False:
-                    alert.setText("Error")
-                else:
-                    pass
-                alert.exec()
-            button1 = QPushButton()
-            button1.setText("Approve")
-            button1.clicked.connect(notification)
-
-            layout.addWidget(label1)
-            layout.addWidget(Username)
-            layout.addWidget(label2)
-            layout.addWidget(Calbutton)
-            layout.addWidget(label3)
-            layout.addWidget(Email)
-            layout.addWidget(label4)
-            layout.addWidget(Password)
-            layout.addWidget(label5)
-            layout.addWidget(button1)
-            return layout
     
     def BookNotification():#[1] Confirmatin to the user that the slot was booked successfully.
         pass
@@ -160,7 +89,13 @@ def main():
     app = QApplication(sys.argv)
     window = QWidget()
     layout = QGridLayout()
-    reg = frontProcess.Register.initUI(0)
+    def Timeslot():
+        try:
+            for x in range(0,100):
+                layout.itemAt(x).widget().deleteLater()
+        except:
+            pass
+        #layout.addLayout()
     logLabel1 = QLabel()
     logLabel1.setText("DOB:")
     logLabel1.move(75,10)
@@ -174,8 +109,13 @@ def main():
     LogCalLoginbutton.move(50,25)
     LogCalLoginbutton.clicked.connect(logCalendar)
     def changeName():
-        LogCalLoginbutton.setText(data["Login"]["Date"])
-        regCalbutton.setText(data["Register"]["Date"])
+        try:
+            if data["Login"]["Date"] != "":
+                LogCalLoginbutton.setText(data["Login"]["Date"])
+            if data["Register"]["Date"] != "":
+                regCalbutton.setText(data["Register"]["Date"])
+        except:
+            pass
     qTimer = QTimer()
     qTimer.setInterval(1000)
     qTimer.timeout.connect(changeName)
@@ -186,15 +126,16 @@ def main():
     logPassword = QLineEdit()
     logPassword.move(20,70)
     logPassword.setEchoMode(QLineEdit.Password)
-    def notification():
+    def logNotification():
         choice = backProcess.Login(data["Login"]["Date"],logPassword.text())
         alert = QMessageBox()
         if choice == True:
             data[data["Direction"]]["Status"] = True
             data["Direction"] = "Book"
             print(data)
-            Book = frontProcess.Book()
-            Book.show()
+            Timeslot()
+            #Book = frontProcess.Book()
+            #Book.show()
         else:
             alert = QMessageBox()
             alert.setText("Error")
@@ -202,7 +143,7 @@ def main():
     logButton1 = QPushButton()
     logButton1.setText("Login")
     logButton1.move(50,100)
-    logButton1.clicked.connect(notification)
+    logButton1.clicked.connect(logNotification)
 
     #Register:
     regLabel1 = QLabel()
@@ -228,7 +169,7 @@ def main():
     regPassword.setEchoMode(QLineEdit.Password)
     regLabel5 = QLabel()
     regLabel5.setText("Must contain 2 capital letters\n1 number\nbetween 8 and 15 characters long.")
-    def notification():
+    def regNotification():
         choice = backProcess.Register(regUsername.text(),data["Register"]["Date"],regEmail.text(),regPassword.text())
         print(choice)
         alert = QMessageBox()
@@ -240,6 +181,7 @@ def main():
                 "Date":"Calendar",
                 "Password":""
             }
+            Timeslot()
         elif choice == False:
             alert.setText("Error")
         else:
@@ -247,7 +189,7 @@ def main():
         alert.exec()
     regButton1 = QPushButton()
     regButton1.setText("Approve")
-    regButton1.clicked.connect(notification)
+    regButton1.clicked.connect(regNotification)
     #Login Stuff
     layout.addWidget(QLabel("Login: "),0,0)
     layout.addWidget(logLabel1,1,0)
