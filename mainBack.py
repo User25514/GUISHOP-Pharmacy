@@ -34,6 +34,8 @@ class backProcess:
         pass
     def Register(self,name,dob,email,password):#[5] Make Account
         #[6];
+        if (name or dob or email or password) == "":
+            return False
         print(f"{name}, {dob}, {email}, {password}")
         REG = dataValidation.Register
         con = sqlite3.connect('database.db')
@@ -63,6 +65,8 @@ class backProcess:
         con.close()
         return True
     def Login(self,dob,password):#[5] login
+        if (dob or password) == "":
+            return False
         #[7]
         con = sqlite3.connect('database.db')
         cur = con.cursor()
@@ -73,6 +77,16 @@ class backProcess:
                 return True
         con.close()
         return False
+    def GrabMedication(self,medication):
+        #[8]
+        medication = {"Status":False}
+        con = sqlite3.connect('database.db')
+        cur = con.cursor()
+        for row in cur.execute('SELECT * FROM Medication'):
+            #print(row)
+            medication[row[0]] = {'Name':row[1],'Price':row[2],'Quantity':row[3]}
+        con.close()
+        return True, medication
     class MultiThread():
         def DateCheck(DateDic):
             pass

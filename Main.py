@@ -3,7 +3,8 @@ import sys
 from datetime import datetime
 import calendar
 from PyQt5.QtWidgets import *
-from PyQt5.QtCore import QDate, QTimer
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 import _thread
 import mainBack
 backProcess = mainBack.backProcess()
@@ -25,7 +26,7 @@ data = {
         "Date":"Calendar"
     }
 }
-class frontProcess:# PythonQT https://build-system.fman.io/pyqt5-tutorial
+class frontProcess:
     def __init__(self):
         pass
     class calendarPopup(QWidget):
@@ -64,18 +65,10 @@ class frontProcess:# PythonQT https://build-system.fman.io/pyqt5-tutorial
             self.calendar.clicked.connect(self.printDateInfo)
 
         def printDateInfo(self, qDate):
-            self.qDate = qDate
-            #print('{0}/{1}/{2}'.format(qDate.month(), qDate.day(), qDate.year()))
-            
+            self.qDate = qDate            
 
         def notification(self):
-                #alert = QMessageBox()
-                #print(self.qDate)
                 data[data["Direction"]]["Date"] = '{0}/{1}/{2}'.format(self.qDate.month(), self.qDate.day(), self.qDate.year())
-                
-                #print(data)
-                #alert.setText('{0}/{1}/{2}'.format(self.qDate.month(), self.qDate.day(), self.qDate.year()))
-                #alert.exec()
                 self.close()
     
     def BookNotification():#[1] Confirmatin to the user that the slot was booked successfully.
@@ -95,7 +88,49 @@ def main():
                 layout.itemAt(x).widget().deleteLater()
         except:
             pass
-        #layout.addLayout()
+        status, medication = backProcess.GrabMedication(0)
+        if status == True:
+            x,y,ID = 5,0,1
+            print(medication)
+            for a in medication:
+                if a == "Status":
+                    continue
+                if x / 4 >= len(medication) / 2:
+                    y += 1
+                    x = 5
+                layout.addWidget(QLabel(medication[a]["Name"]),x-2,y)
+                layout.addWidget(QLabel(f"£{medication[a]['Price']}"),x-1,y)
+                layout.addWidget(QLabel(medication[a]["Quantity"]),x,y)
+                medication[a]["Text"] = QLineEdit()
+                layout.addWidget(medication[a]["Text"],x+1,y)
+                medication[a]["Error"] = QLabel()
+                layout.addWidget(medication[a]["Error"],x+2,y)
+                x += 5
+                ID += 1
+        def confirm():
+            medication["Orders"] = {}
+            for a in medication:
+                if a == "Orders" or a == "Status":
+                    continue
+                if medication[a]["Text"].text() == "":
+                    continue
+                elif int(medication[a]["Text"].text()) > int(medication[a]["Quantity"]):
+                    medication[a]["Error"].setText("Too many items")
+                    medication["Status"] = False
+                    continue
+                else:
+                    medication["Orders"][a] = int(medication[a]["Text"].text())
+                medication["Orders"][a] = {}
+                medication["Orders"][a]["Quantity"] = medication[a]["Text"].text()
+                medication["Status"] = True
+            #backProcess.UpdateMedication(medication)
+            if medication["Status"] == True:
+                pass
+            else:
+                pass
+        Status = QPushButton("Confirm")
+        Status.clicked.connect(confirm)
+        layout.addWidget(Status,(x*4)*ID+2,0)
     logLabel1 = QLabel("DOB: ")
     logLabel1.move(75,10)
     cal = frontProcess.calendarPopup()
@@ -201,6 +236,7 @@ def main():
     #
     window.setLayout(layout)
     window.show()
+    Timeslot()
     app.exec(app.exec_())
 if __name__ == "__main__":
     main()
