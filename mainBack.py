@@ -9,24 +9,33 @@ class backProcess:
         self.cur = self.con.cursor()
         try:
             self.cur.execute("CREATE TABLE Register (RegID,name,dob,email,password)")
-            self.cur.execute("CREATE TABLE Bookings (BookID,RegIDFK,dateTime)")
-            self.cur.execute("CREATE TABLE Medication (MedID,Name,Price,Quantity)")
-            self.cur.execute("CREATE TABLE Medication (MedID,Name,Price,Quantity)")
+            self.cur.execute("CREATE TABLE Bookings (BookID,RegIDFK,Date,Time)")
+            self.cur.execute("CREATE TABLE Tablet (TabletID,Name,Price,Quantity)")
+            self.cur.execute("CREATE TABLE Liquid (LiquidID,Name,Price,Quantity)")
+            self.cur.execute("CREATE TABLE Capsules (CapsulesID,Name,Price,Quantity)")
             self.con.commit()
         except:
             pass
         self.con.close()
-    def Book(self,email,date):#[1][2] Books a free date/timeslot
-        self.REG = dataValidation.Register
-        self.con = sqlite3.connect('database.db')
-        self.cur = self.con.cursor()
-        self.cur.execute(f"INSERT INTO Bookings VALUES ('{date}','{email}')")
-        self.con.commit()
-        for row in self.cur.execute('SELECT * FROM Bookings ORDER BY date'):
-            print(row)
-
-        self.con.close()
-        pass
+    def BookRecall(self,Date):#[1][2] Books a free date/timeslot
+        print(Date)
+        if (Date) == "":
+            return False, False
+        #[7]
+        con = sqlite3.connect('database.db')
+        cur = con.cursor()
+        Times = ["08:00","10:00","12:00","14:00","16:00","18:00"]
+        print("Oke")
+        for row in cur.execute('SELECT * FROM Bookings'):
+            #print(row)
+            if row[2] == Date:
+                Times.remove(row[3])
+        con.close()
+        print("Returning")
+        if len(Times) == 0:
+            return False, False
+        else:
+            return True, Times
     def ShopState():#[2][3] Choice to shop in person or thorough the application.
         pass
     def ShoppingRecipt():#[4] A recipt will be produced with details of what has been bought with the total price.
@@ -63,7 +72,7 @@ class backProcess:
             #print(row)
 
         con.close()
-        return True
+        return True, RegID+1
     def Login(self,dob,password):#[5] login
         if (dob or password) == "":
             return False
@@ -74,7 +83,7 @@ class backProcess:
             #print(row)
             if row[4] == password and row[2] == dob:
                 con.close()
-                return True
+                return True, row[0]
         con.close()
         return False
     def GrabMedication(self,medication):

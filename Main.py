@@ -9,6 +9,7 @@ import _thread
 import mainBack
 backProcess = mainBack.backProcess()
 data = {
+    "User ID":0,
     "Direction":"",
     "Register":{
         "Status":False,
@@ -22,8 +23,13 @@ data = {
     },
     "Book":{
         "Status":False,
+        "Date":"",
+        "Time":"",
+    },
+    "Shop":{
+        "Status":False,
         "Name":"",
-        "Date":"Calendar"
+        "Date":""
     }
 }
 class frontProcess:
@@ -32,7 +38,7 @@ class frontProcess:
     class calendarPopup(QWidget):
         def __init__(self):
             super().__init__()
-            self.setWindowTitle('Calendar Demo')
+            self.setWindowTitle('Calendar')
             if (data["Register"]["Status"] or data["Login"]["Status"]) == True:
                 self.setGeometry(300, 300, 1000, 1000)
             else:
@@ -50,8 +56,9 @@ class frontProcess:
             Month = datetime.now().month
             Day = datetime.now().day
             self.qDate = QDate(Year, Month, Day)
-            
+            print(data["Direction"])
             if data["Direction"] == "Book":
+                print("Book Time")
                 self.calendar.setMinimumDate(QDate(Year, Month, Day))
                 if (Day + 15) > calendar.monthrange(Year, Month)[1]:
                     newDay = (Day + 15) - calendar.monthrange(Year, Month)[1]
@@ -59,7 +66,7 @@ class frontProcess:
                 else:
                     self.calendar.setMaximumDate(QDate(Year, Month, Day + 15))
             else:
-                self.calendar.setMinimumDate(QDate(Year-100, Month, Day))
+                self.calendar.setMinimumDate(QDate(Year-118, Month, Day))
                 self.calendar.setMaximumDate(QDate(Year-18, Month, Day))
             self.calendar.setSelectedDate(QDate(Year, Month, 1))
             self.calendar.clicked.connect(self.printDateInfo)
@@ -71,18 +78,82 @@ class frontProcess:
                 data[data["Direction"]]["Date"] = '{0}/{1}/{2}'.format(self.qDate.month(), self.qDate.day(), self.qDate.year())
                 self.close()
     
-    def BookNotification():#[1] Confirmatin to the user that the slot was booked successfully.
-        pass
-    def Shop():#[3][4][5] Browse medicines of the cargories provided.
+    def Book(layout,window):#[1] Confirmatin to the user that the slot was booked successfully.
+        try:
+            for x in range(0,100):
+                layout.itemAt(x).widget().deleteLater()
+        except:
+            pass
+        bookLabel1 = QLabel("Date: ")
+        bookCal = frontProcess.calendarPopup()
+        def bookCalendar():
+            print(data)
+            qTimer.start()
+            bookCal.show()
+        bookCalLoginbutton = QPushButton("Calendar")
+        bookCalLoginbutton.clicked.connect(bookCalendar)
+        def changeName():
+            try:
+                if data["Book"]["Date"] != "" and bookCalLoginbutton.text() != data["Book"]["Date"]:
+                    bookCalLoginbutton.setText(data["Book"]["Date"])
+                    print("Run")
+                    print(data["Book"]["Date"])
+                    Status, Times = backProcess.BookRecall(data["Book"]["Date"])
+                    print(Times)
+                    if Status == True:
+                        print("less go")
+                        for x in range(0,len(Times)-1):
+                            LabelThing = QRadioButton("Slot " + str(x+1) + ": " + str(Times[x]))
+                            LabelThing.Time = Times[x]
+                            print(x+4)
+                            LabelThing.clicked.connect(TimeChoice)
+                            layout.addWidget(LabelThing,x+3,1)
+                            print(x)
+            except:
+                pass
+
+        qTimer = QTimer()
+        qTimer.setInterval(1000)
+        qTimer.timeout.connect(changeName)
+
+        bookLabel2 = QLabel("Time: ")
+
+        def TimeChoice():
+            LabelThing = layout.sender()
+            if LabelThing.isChecked():
+                print("Country is %s" % (LabelThing.Time))
+                data["Book"]["Time"] = LabelThing.Time
+        def BookInperson():
+            print(data["Book"])
+
+            choice, = backProcess.Login(data["Login"]["Date"],bookPassword.text())
+            alert = QMessageBox()
+            if choice == True:
+                data[data["Direction"]]["Status"] = True
+                data["Direction"] = "Book"
+                print(data)
+                #frontProcess.Shop(layout)
+                frontProcess.Book(layout)
+                #Book.show()
+            else:
+                alert = QMessageBox()
+                alert.setText("Error")
+                alert.exec()
+
+        bookButton1 = QPushButton("Order Online")
+        #bookButton1.clicked.connect()
+        bookButton2 = QPushButton("Book Inperson")
+        bookButton2.clicked.connect(BookInperson)
+        #layout.addWidget(QLabel("Login: "),0,1)
+        layout.addWidget(bookLabel1,0,1)
+        layout.addWidget(bookCalLoginbutton,1,1)
+        layout.addWidget(bookLabel2,2,1)
+
+        layout.addWidget(bookButton1,9,0)
+        layout.addWidget(bookButton2,9,1)
+        
+    def Shop(layout):#[3][4][5] Browse medicines of the cargories provided.
         # Each product will be associated with a particular price and QR code.
-        pass
-    def Payment():# Scan QR code on receipt.
-        pass
-def main():
-    app = QApplication(sys.argv)
-    window = QWidget()
-    layout = QGridLayout()
-    def Timeslot():
         try:
             for x in range(0,100):
                 layout.itemAt(x).widget().deleteLater()
@@ -131,15 +202,19 @@ def main():
         Status = QPushButton("Confirm")
         Status.clicked.connect(confirm)
         layout.addWidget(Status,(x*4)*ID+2,0)
+    def Payment():# Scan QR code on receipt.
+        pass
+def main(): # Login Register
+    app = QApplication(sys.argv)
+    window = QWidget()
+    layout = QGridLayout()
     logLabel1 = QLabel("DOB: ")
-    logLabel1.move(75,10)
     cal = frontProcess.calendarPopup()
     def logCalendar():
         data["Direction"] = "Login"
         qTimer.start()
         cal.show()
     LogCalLoginbutton = QPushButton("Calendar")
-    LogCalLoginbutton.move(50,25)
     LogCalLoginbutton.clicked.connect(logCalendar)
     def changeName():
         try:
@@ -154,19 +229,17 @@ def main():
     qTimer.timeout.connect(changeName)
 
     logLabel2 = QLabel("Password: ")
-    logLabel2.move(60,50)
     logPassword = QLineEdit()
-    logPassword.move(20,70)
     logPassword.setEchoMode(QLineEdit.Password)
     def logNotification():
-        choice = backProcess.Login(data["Login"]["Date"],logPassword.text())
+        choice,data["User ID"] = backProcess.Login(data["Login"]["Date"],logPassword.text())
         alert = QMessageBox()
         if choice == True:
             data[data["Direction"]]["Status"] = True
             data["Direction"] = "Book"
             print(data)
-            Timeslot()
-            #Book = frontProcess.Book()
+            #frontProcess.Shop(layout)
+            frontProcess.Book(layout,window)
             #Book.show()
         else:
             alert = QMessageBox()
@@ -195,7 +268,7 @@ def main():
     regPassword.setEchoMode(QLineEdit.Password)
     regLabel5 = QLabel("Must contain 2 capital letters\n1 number\nbetween 8 and 15 characters long.")
     def regNotification():
-        choice = backProcess.Register(regUsername.text(),data["Register"]["Date"],regEmail.text(),regPassword.text())
+        choice,data["User ID"] = backProcess.Register(regUsername.text(),data["Register"]["Date"],regEmail.text(),regPassword.text())
         print(choice)
         alert = QMessageBox()
         if choice == True:
@@ -206,7 +279,10 @@ def main():
                 "Date":"Calendar",
                 "Password":""
             }
-            Timeslot()
+            data["Direction"] = "Book"
+            print(data)
+            #frontProcess.Shop(layout)
+            frontProcess.Book(layout,window)
         elif choice == False:
             alert.setText("Error")
         else:
@@ -236,7 +312,10 @@ def main():
     #
     window.setLayout(layout)
     window.show()
-    Timeslot()
+    data["Direction"] = "Book"
+    print(data)
+    #frontProcess.Shop(layout)
+    frontProcess.Book(layout,window)
     app.exec(app.exec_())
 if __name__ == "__main__":
     main()
