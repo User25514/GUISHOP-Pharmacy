@@ -36,6 +36,20 @@ class backProcess:
             return False, False
         else:
             return True, Times
+    def BookRegister(self,USID,BookTime,BookDate):
+        print(USID,BookTime,BookDate)
+        con = sqlite3.connect('database.db')
+        cur = con.cursor()
+        RegID = 0
+        for row in cur.execute('SELECT * FROM Bookings'):
+            RegID = row[0]
+        cur.execute(f"INSERT INTO Bookings VALUES ('{int(RegID)+1}','{USID}','{BookDate}','{BookTime}')")
+        con.commit()
+        #for row in cur.execute('SELECT * FROM Register ORDER BY RegID'):
+            #print(row)
+
+        con.close()
+        return True
     def ShopState():#[2][3] Choice to shop in person or thorough the application.
         pass
     def ShoppingRecipt():#[4] A recipt will be produced with details of what has been bought with the total price.

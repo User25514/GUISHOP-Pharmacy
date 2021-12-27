@@ -125,15 +125,14 @@ class frontProcess:
                 data["Book"]["Time"] = LabelThing.Time
         def BookInperson():
             print(data["Book"])
+            choice = backProcess.BookRegister(data["User ID"],data["Book"]["Time"],data["Book"]["Date"])
 
-            choice, = backProcess.Login(data["Login"]["Date"],bookPassword.text())
             alert = QMessageBox()
             if choice == True:
                 data[data["Direction"]]["Status"] = True
-                data["Direction"] = "Book"
+                data["Direction"] = "Shop"
                 print(data)
-                #frontProcess.Shop(layout)
-                frontProcess.Book(layout)
+                frontProcess.Shop(layout)
                 #Book.show()
             else:
                 alert = QMessageBox()
@@ -312,10 +311,10 @@ def main(): # Login Register
     #
     window.setLayout(layout)
     window.show()
-    data["Direction"] = "Book"
-    print(data)
+    #data["Direction"] = "Book"
+    #print(data)
     #frontProcess.Shop(layout)
-    frontProcess.Book(layout,window)
+    #frontProcess.Book(layout,window)
     app.exec(app.exec_())
 if __name__ == "__main__":
     main()
