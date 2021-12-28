@@ -86,7 +86,7 @@ class backProcess:
             #print(row)
 
         con.close()
-        return True, RegID+1
+        return True, int(RegID)+1
     def Login(self,dob,password):#[5] login
         if (dob or password) == "":
             return False

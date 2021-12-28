@@ -98,17 +98,30 @@ class frontProcess:
                     bookCalLoginbutton.setText(data["Book"]["Date"])
                     print("Run")
                     print(data["Book"]["Date"])
+                    Timing = ["08:00","10:00","12:00","14:00","16:00","18:00"]
                     Status, Times = backProcess.BookRecall(data["Book"]["Date"])
                     print(Times)
                     if Status == True:
-                        print("less go")
-                        for x in range(0,len(Times)-1):
+                        for x in range(0,6):
+                            print("start")
+                            try:
+                                print(x+5," ",layout.itemAt(x+5).widget().text())
+                                layout.itemAt(x+5).widget().deleteLater()
+                                print("deleted")
+                            except:
+                                pass
+                        print("-1","less go")
+                        for x in range(0,len(Times)):
+                            print("-2",Times[x])
+
                             LabelThing = QRadioButton("Slot " + str(x+1) + ": " + str(Times[x]))
                             LabelThing.Time = Times[x]
-                            print(x+4)
                             LabelThing.clicked.connect(TimeChoice)
+    
+                            print("-6","Finished Delete Function",x)
                             layout.addWidget(LabelThing,x+3,1)
-                            print(x)
+                            print("-7",x," ",layout.itemAt(x+5).widget().text())
+                            
             except:
                 pass
 
@@ -129,18 +142,22 @@ class frontProcess:
 
             alert = QMessageBox()
             if choice == True:
-                data[data["Direction"]]["Status"] = True
-                data["Direction"] = "Shop"
-                print(data)
-                frontProcess.Shop(layout)
+                alert = QMessageBox()
+                alert.setText("Booked Successfully") 
+                alert.exec()
+                pass
                 #Book.show()
             else:
                 alert = QMessageBox()
                 alert.setText("Error")
                 alert.exec()
-
+        def BookOnline():
+            data[data["Direction"]]["Status"] = True
+            data["Direction"] = "Shop"
+            print(data)
+            frontProcess.Shop(layout)
         bookButton1 = QPushButton("Order Online")
-        #bookButton1.clicked.connect()
+        bookButton1.clicked.connect(BookOnline)
         bookButton2 = QPushButton("Book Inperson")
         bookButton2.clicked.connect(BookInperson)
         #layout.addWidget(QLabel("Login: "),0,1)
