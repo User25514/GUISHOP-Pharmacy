@@ -2,7 +2,6 @@ class dataValidation:
     class Register:#[6]
         def nameVal(name):
             try:
-                num = 0
                 for x in name:
                     if x.isnumeric() == True or x == " ":
                         raise Exception
