@@ -9,7 +9,7 @@ import _thread
 import mainBack
 backProcess = mainBack.backProcess()
 data = {
-    "User ID":0,
+    "User ID":1,
     "Direction":"",
     "Register":{
         "Status":False,
@@ -25,6 +25,8 @@ data = {
         "Status":False,
         "Date":"",
         "Time":"",
+        "Rough_Time":[],
+        "Rough_Timings":[]
     },
     "Shop":{
         "Status":False,
@@ -39,10 +41,11 @@ class frontProcess:
         def __init__(self):
             super().__init__()
             self.setWindowTitle('Calendar')
-            if (data["Register"]["Status"] or data["Login"]["Status"]) == True:
-                self.setGeometry(300, 300, 1000, 1000)
-            else:
-                self.setGeometry(300, 300, 350, 250)
+            self.setGeometry(300, 300, 350, 250)
+            #if (data["Register"]["Status"] or data["Login"]["Status"]) == True:
+                #self.setGeometry(300, 300, 1000, 1000)
+            #else:
+                #self.setGeometry(300, 300, 350, 250)
             self.initUI()
         def initUI(self):
             self.calendar = QCalendarWidget(self)
@@ -98,30 +101,42 @@ class frontProcess:
                     bookCalLoginbutton.setText(data["Book"]["Date"])
                     print("Run")
                     print(data["Book"]["Date"])
-                    Timing = ["08:00","10:00","12:00","14:00","16:00","18:00"]
-                    Status, Times = backProcess.BookRecall(data["Book"]["Date"])
-                    print(Times)
+
+                    Status, data["Book"]["Rough_Time"] = backProcess.BookRecall(data["Book"]["Date"])
+                    print(data["Book"]["Rough_Time"])
                     if Status == True:
-                        for x in range(0,6):
-                            print("start")
+                        print("Status Start")
+                        print(data["Book"]["Rough_Timings"])
+                        for x in range(0,len(data["Book"]["Rough_Timings"])):
+
                             try:
-                                print(x+5," ",layout.itemAt(x+5).widget().text())
-                                layout.itemAt(x+5).widget().deleteLater()
+                                print(f"Trying to delete: {layout.itemAt(x+4).widget().text()}")
+                                layout.itemAt(x+4).widget().deleteLater()
                                 print("deleted")
                             except:
                                 pass
-                        print("-1","less go")
-                        for x in range(0,len(Times)):
-                            print("-2",Times[x])
+                        print("-1","less go",data["Book"]["Rough_Time"])
+                        data["Book"]["Rough_Timings"] = data["Book"]["Rough_Time"]
+                        #data["Book"]["Rough_Timings"].append("Placement")
+                        for x in range(0,len(data["Book"]["Rough_Time"])-1):
+                            print("-2",data["Book"]["Rough_Time"][x])
 
-                            LabelThing = QRadioButton("Slot " + str(x+1) + ": " + str(Times[x]))
-                            LabelThing.Time = Times[x]
+                            LabelThing = QRadioButton("Slot " + str(x+1) + ": " + str(data["Book"]["Rough_Time"][x]))
+                            LabelThing.Time = data["Book"]["Rough_Time"][x]
                             LabelThing.clicked.connect(TimeChoice)
     
-                            print("-6","Finished Delete Function",x)
-                            layout.addWidget(LabelThing,x+3,1)
-                            print("-7",x," ",layout.itemAt(x+5).widget().text())
-                            
+                            print(f'-3 Finished Delete Function {data["Book"]["Rough_Time"][x]} - {x+4}')
+                            try:
+                                print(x+4," ",layout.itemAt(x+4).widget().text())
+                            except:
+                                pass
+                            print("-4")
+                            layout.addWidget(LabelThing,x+5,1)
+                            print("-5")
+                            #print("-5",x," ",layout.itemAt(x+5).widget().text())
+                        bookButton2 = QPushButton("Book Inperson")
+                        bookButton2.clicked.connect(BookInperson)
+                        layout.addWidget(bookButton2,20,1)
             except:
                 pass
 
@@ -158,15 +173,14 @@ class frontProcess:
             frontProcess.Shop(layout)
         bookButton1 = QPushButton("Order Online")
         bookButton1.clicked.connect(BookOnline)
-        bookButton2 = QPushButton("Book Inperson")
-        bookButton2.clicked.connect(BookInperson)
+
         #layout.addWidget(QLabel("Login: "),0,1)
         layout.addWidget(bookLabel1,0,1)
         layout.addWidget(bookCalLoginbutton,1,1)
         layout.addWidget(bookLabel2,2,1)
 
-        layout.addWidget(bookButton1,9,0)
-        layout.addWidget(bookButton2,9,1)
+        layout.addWidget(bookButton1,20,0)
+        
         
     def Shop(layout):#[3][4][5] Browse medicines of the cargories provided.
         # Each product will be associated with a particular price and QR code.
@@ -328,10 +342,10 @@ def main(): # Login Register
     #
     window.setLayout(layout)
     window.show()
-    #data["Direction"] = "Book"
+    data["Direction"] = "Book"
     #print(data)
     #frontProcess.Shop(layout)
-    #frontProcess.Book(layout,window)
+    frontProcess.Book(layout,window)
     app.exec(app.exec_())
 if __name__ == "__main__":
     main()
