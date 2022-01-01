@@ -37,7 +37,10 @@ class backProcess:
         else:
             return True, Times
     def BookRegister(self,USID,BookTime,BookDate):
-        print(USID,BookTime,BookDate)
+        print("-------------",USID,"-",BookTime,"-",BookDate)
+        if ((BookTime or BookDate) == ""):
+            print("Die")
+            return False
         con = sqlite3.connect('database.db')
         cur = con.cursor()
         RegID = 0
@@ -100,16 +103,22 @@ class backProcess:
                 return True, row[0]
         con.close()
         return False
-    def GrabMedication(self,medication):
+    def GrabMedication(self,Tables):
         #[8]
-        medication = {"Status":False}
         con = sqlite3.connect('database.db')
         cur = con.cursor()
-        for row in cur.execute('SELECT * FROM Medication'):
-            #print(row)
-            medication[row[0]] = {'Name':row[1],'Price':row[2],'Quantity':row[3]}
+        Medication = {}
+        try:
+            for x in Tables:
+                Medication[x] = {}
+                for row in cur.execute(f'SELECT * FROM {x}'):
+                    #print(row)
+                    Medication[x][row[0]] = {'Name':row[1],'Price':row[2],'Quantity':row[3]}
+        except: 
+            con.close()
+            return False, []
         con.close()
-        return True, medication
+        return True, Medication
     class MultiThread():
         def DateCheck(DateDic):
             pass

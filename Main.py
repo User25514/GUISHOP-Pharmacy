@@ -30,6 +30,8 @@ data = {
     },
     "Shop":{
         "Status":False,
+        "Categories":("Tablet","Liquid","Capsules"),
+        "Section":"",
         "Name":"",
         "Date":""
     }
@@ -98,42 +100,29 @@ class frontProcess:
         def changeName():
             try:
                 if data["Book"]["Date"] != "" and bookCalLoginbutton.text() != data["Book"]["Date"]:
+                    data["Book"]["Time"] = ""
                     bookCalLoginbutton.setText(data["Book"]["Date"])
-                    print("Run")
-                    print(data["Book"]["Date"])
 
                     Status, data["Book"]["Rough_Time"] = backProcess.BookRecall(data["Book"]["Date"])
-                    print(data["Book"]["Rough_Time"])
                     if Status == True:
-                        print("Status Start")
-                        print(data["Book"]["Rough_Timings"])
                         for x in range(0,len(data["Book"]["Rough_Timings"])):
 
                             try:
-                                print(f"Trying to delete: {layout.itemAt(x+4).widget().text()}")
                                 layout.itemAt(x+4).widget().deleteLater()
-                                print("deleted")
                             except:
                                 pass
-                        print("-1","less go",data["Book"]["Rough_Time"])
                         data["Book"]["Rough_Timings"] = data["Book"]["Rough_Time"]
-                        #data["Book"]["Rough_Timings"].append("Placement")
                         for x in range(0,len(data["Book"]["Rough_Time"])-1):
-                            print("-2",data["Book"]["Rough_Time"][x])
 
                             LabelThing = QRadioButton("Slot " + str(x+1) + ": " + str(data["Book"]["Rough_Time"][x]))
                             LabelThing.Time = data["Book"]["Rough_Time"][x]
                             LabelThing.clicked.connect(TimeChoice)
     
-                            print(f'-3 Finished Delete Function {data["Book"]["Rough_Time"][x]} - {x+4}')
                             try:
                                 print(x+4," ",layout.itemAt(x+4).widget().text())
                             except:
                                 pass
-                            print("-4")
                             layout.addWidget(LabelThing,x+5,1)
-                            print("-5")
-                            #print("-5",x," ",layout.itemAt(x+5).widget().text())
                         bookButton2 = QPushButton("Book Inperson")
                         bookButton2.clicked.connect(BookInperson)
                         layout.addWidget(bookButton2,20,1)
@@ -153,8 +142,10 @@ class frontProcess:
                 data["Book"]["Time"] = LabelThing.Time
         def BookInperson():
             print(data["Book"])
-            choice = backProcess.BookRegister(data["User ID"],data["Book"]["Time"],data["Book"]["Date"])
-
+            if (data["Book"]["Time"] and data["Book"]["Date"]) != "":
+                choice = backProcess.BookRegister(data["User ID"],data["Book"]["Time"],data["Book"]["Date"])
+            else:
+                choice = False
             alert = QMessageBox()
             if choice == True:
                 alert = QMessageBox()
@@ -164,7 +155,7 @@ class frontProcess:
                 #Book.show()
             else:
                 alert = QMessageBox()
-                alert.setText("Error")
+                alert.setText("Error, no date or time selected is free")
                 alert.exec()
         def BookOnline():
             data[data["Direction"]]["Status"] = True
@@ -189,49 +180,94 @@ class frontProcess:
                 layout.itemAt(x).widget().deleteLater()
         except:
             pass
-        status, medication = backProcess.GrabMedication(0)
+        status, medication = backProcess.GrabMedication(data["Shop"]["Categories"])
+        medication["Orders"] = {}
         if status == True:
-            x,y,ID = 5,0,1
+            
             print(medication)
-            for a in medication:
-                if a == "Status":
-                    continue
-                if x / 4 >= len(medication) / 2:
-                    y += 1
-                    x = 5
-                layout.addWidget(QLabel(medication[a]["Name"]),x-2,y)
-                layout.addWidget(QLabel(f"£{medication[a]['Price']}"),x-1,y)
-                layout.addWidget(QLabel(medication[a]["Quantity"]),x,y)
-                medication[a]["Text"] = QLineEdit()
-                layout.addWidget(medication[a]["Text"],x+1,y)
-                medication[a]["Error"] = QLabel()
-                layout.addWidget(medication[a]["Error"],x+2,y)
-                x += 5
-                ID += 1
+
+            data["Shop"]["Section"] = data["Shop"]["Categories"][0]
+            def CallMed():
+                x,y,ID = 5,0,1
+                for a in medication[data["Shop"]["Section"]]:
+                    #print(medication[data["Shop"]["Section"]][a])
+                    if x / 4 >= len(medication[data["Shop"]["Section"]]) / 2:
+                        y += 1
+                        x = 5
+                    layout.addWidget(QLabel(medication[data["Shop"]["Section"]][a]["Name"]),x-2,y)
+                    layout.addWidget(QLabel(f"£{medication[data['Shop']['Section']][a]['Price']}"),x-1,y)
+                    layout.addWidget(QLabel(medication[data["Shop"]["Section"]][a]["Quantity"]),x,y)
+                    medication[data["Shop"]["Section"]][a]["Text"] = QLineEdit()
+                    layout.addWidget(medication[data["Shop"]["Section"]][a]["Text"],x+1,y)
+                    medication[data["Shop"]["Section"]][a]["Error"] = QLabel()
+                    layout.addWidget(medication[data["Shop"]["Section"]][a]["Error"],x+2,y)
+                    x += 5
+                    ID += 1
+                return x,y,ID
+            x,y,ID = CallMed()
         def confirm():
-            medication["Orders"] = {}
-            for a in medication:
+            print("confirming")
+            
+            for a in  medication[data["Shop"]["Section"]]:
                 if a == "Orders" or a == "Status":
                     continue
-                if medication[a]["Text"].text() == "":
+                if  medication[data["Shop"]["Section"]][a]["Text"].text() == "":
                     continue
-                elif int(medication[a]["Text"].text()) > int(medication[a]["Quantity"]):
-                    medication[a]["Error"].setText("Too many items")
+                elif int( medication[data["Shop"]["Section"]][a]["Text"].text()) > int(medication[data["Shop"]["Section"]][a]["Quantity"]):
+                    medication[data["Shop"]["Section"]][a]["Error"].setText("Too many items")
                     medication["Status"] = False
                     continue
                 else:
-                    medication["Orders"][a] = int(medication[a]["Text"].text())
-                medication["Orders"][a] = {}
-                medication["Orders"][a]["Quantity"] = medication[a]["Text"].text()
-                medication["Status"] = True
+                    medication["Orders"][data["Shop"]["Section"]] = {}
+                    medication["Orders"][data["Shop"]["Section"]][a] = int(medication[data["Shop"]["Section"]][a]["Text"].text())
+                if medication[data["Shop"]["Section"]][a]["Text"].text() == "0":
+                    del medication["Orders"][data["Shop"]["Section"]][a]
+                else:
+                    medication["Orders"][data["Shop"]["Section"]][a] = {}
+                    medication["Orders"][data["Shop"]["Section"]][a]["Quantity"] = medication[data["Shop"]["Section"]][a]["Text"].text()
+                    medication["Status"] = True
             #backProcess.UpdateMedication(medication)
             if medication["Status"] == True:
                 pass
             else:
                 pass
-        Status = QPushButton("Confirm")
-        Status.clicked.connect(confirm)
-        layout.addWidget(Status,(x*4)*ID+2,0)
+            print(medication["Orders"])
+        def TimeChoice():
+            LabelThing = layout.sender()
+            if LabelThing.isChecked():
+                print("Country is %s" % (LabelThing.Categories))
+                data["Shop"]["Section"] = LabelThing.Categories
+                print("Recon")
+                try:
+                    for x in range(0,100):
+                        print(x," - ",layout.itemAt(x).widget().text())
+                except:
+                    pass
+                print("Recon Done")
+                try:
+                    for x in range(0,100):
+                        print(x," - ",layout.itemAt(x).widget().text())
+                        if ("Slot" in layout.itemAt(x).widget().text()) or (layout.itemAt(x).widget().text() == "Confirm"):
+                            print("Stop")
+                            continue
+                        #print(x," - ",layout.itemAt(x).widget().text())
+                        print("Deleted")
+                        layout.itemAt(x).widget().deleteLater()
+                except:
+                    pass
+                CallMed()
+        counter = 0
+        for a in data["Shop"]["Categories"]:
+            LabelThing = QRadioButton("Slot " + str(counter) + ": " + str(a))
+            LabelThing.Categories = a
+            LabelThing.clicked.connect(TimeChoice)
+            layout.addWidget(LabelThing,(x*4)*ID+2,counter)
+            counter += 1
+        ConfirmButton = QPushButton("Confirm")
+        ConfirmButton.clicked.connect(confirm)
+
+        layout.addWidget(ConfirmButton,(x*4)*ID+3,0)
+
     def Payment():# Scan QR code on receipt.
         pass
 def main(): # Login Register
