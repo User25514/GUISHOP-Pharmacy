@@ -5,7 +5,7 @@ import calendar
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-import _thread
+import qrcode
 import mainBack
 backProcess = mainBack.backProcess()
 data = {
@@ -197,7 +197,10 @@ class frontProcess:
                     layout.addWidget(QLabel(medication[data["Shop"]["Section"]][a]["Name"]),x-2,y)
                     layout.addWidget(QLabel(f"£{medication[data['Shop']['Section']][a]['Price']}"),x-1,y)
                     layout.addWidget(QLabel(medication[data["Shop"]["Section"]][a]["Quantity"]),x,y)
-                    medication[data["Shop"]["Section"]][a]["Text"] = QLineEdit()
+                    try:
+                         medication[data["Shop"]["Section"]][a]["Text"] = QLineEdit(str(medication["Orders"][data["Shop"]["Section"]][a]["Quantity"]))
+                    except:
+                        medication[data["Shop"]["Section"]][a]["Text"] = QLineEdit()
                     layout.addWidget(medication[data["Shop"]["Section"]][a]["Text"],x+1,y)
                     medication[data["Shop"]["Section"]][a]["Error"] = QLabel()
                     layout.addWidget(medication[data["Shop"]["Section"]][a]["Error"],x+2,y)
@@ -205,7 +208,7 @@ class frontProcess:
                     ID += 1
                 return x,y,ID
             x,y,ID = CallMed()
-        def confirm():
+        def CrossWindow():
             print("confirming")
             
             for a in  medication[data["Shop"]["Section"]]:
@@ -236,22 +239,18 @@ class frontProcess:
             LabelThing = layout.sender()
             if LabelThing.isChecked():
                 print("Country is %s" % (LabelThing.Categories))
+                CrossWindow()
                 data["Shop"]["Section"] = LabelThing.Categories
-                print("Recon")
                 try:
                     for x in range(0,100):
                         print(x," - ",layout.itemAt(x).widget().text())
                 except:
                     pass
-                print("Recon Done")
                 try:
                     for x in range(0,100):
-                        print(x," - ",layout.itemAt(x).widget().text())
                         if ("Slot" in layout.itemAt(x).widget().text()) or (layout.itemAt(x).widget().text() == "Confirm"):
-                            print("Stop")
                             continue
                         #print(x," - ",layout.itemAt(x).widget().text())
-                        print("Deleted")
                         layout.itemAt(x).widget().deleteLater()
                 except:
                     pass
@@ -264,7 +263,7 @@ class frontProcess:
             layout.addWidget(LabelThing,(x*4)*ID+2,counter)
             counter += 1
         ConfirmButton = QPushButton("Confirm")
-        ConfirmButton.clicked.connect(confirm)
+        #ConfirmButton.clicked.connect(confirm)
 
         layout.addWidget(ConfirmButton,(x*4)*ID+3,0)
 

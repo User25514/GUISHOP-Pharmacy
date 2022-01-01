@@ -1,6 +1,8 @@
 import sqlite3
 from mainValidation import dataValidation
-
+import pandas as pd
+import numpy as np
+import jinja2
 class backProcess:
     def __init__(self):
         self.REG = dataValidation.Register
@@ -119,6 +121,64 @@ class backProcess:
             return False, []
         con.close()
         return True, Medication
-    class MultiThread():
-        def DateCheck(DateDic):
-            pass
+
+def report_html():
+    from datetime import datetime
+    html = """<html><head>
+	<title>Pharmacy Receipt</title>
+	<style type="text/css">
+        h1, h2, h3, h4, h5, h6, p{ margin: 0;}
+	</style></head>
+<body style="padding:0; margin:0; -webkit-text-size-adjust:none; -ms-text-size-adjust:100%; background-color:#e8e8e8; font-family: Helvetica, sans-serif; font-size:14px; line-height:24px; color:#000000;" id="body">
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse;"><tr>
+		<td bgcolor="#EBEBEB" style="font-size:0px">&zwnj;</td>
+			<td align="center" width="600" bgcolor="#FFFFFF">
+				<table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse;">
+                        <tr><td align="center">
+                                <h1 style="font-weight: lighter; padding-top: 30px; padding-bottom: 20px;">Thank you for your order!</h1>
+                            </td> </tr>
+                        <tr><td align="center">
+                                <h4 style="font-weight: lighter; color: #999999; padding-top: 10px; padding-bottom: 5px;" > -+todaysdate+- </h4>
+                            </td></tr>
+                        <tr><td><table id=billtable width="70%" border="0" cellspacing="0" cellpadding="0" align="center" style="border-collapse: collapse;">
+                                    <tr style="border-top: 2px solid #000000; border-bottom: 2px solid #000000;">
+                                        <td style="padding-top: 5px; padding-bottom: 5px;">Name</td>
+                                        <td style="padding-top: 5px; padding-bottom: 5px;">Quantity</td>
+                                        <td style="padding-top: 5px; padding-bottom: 5px;">Price</td>
+                                    </tr>
+                                    -+InsertLine+-
+                                    -+InsertTotal+-
+
+                                </table></td></tr>
+                        <tr><td align="center">
+                                <h2 style="font-weight: lighter; padding-top: 30px; padding-bottom: 20px;">Your Details</h2>
+                            </td></tr>
+				</table></td><td bgcolor="#EBEBEB" style="font-size:0px">&zwnj;</td>
+    </tr>
+</table>
+</body>
+</html>"""
+    def tableInsert():
+        Table = []
+        for x in lisT:
+            Table.append(f"""<tr style="border-top: 1px solid #999999;">
+    <td style="padding-top: 5px; padding-bottom: 5px;">{x[0]}</td>
+    <td style="padding-top: 5px; padding-bottom: 5px;">{x[2]}</td>
+    <td style="padding-top: 5px; padding-bottom: 5px;">{x[1]}</td>
+</tr>""")
+        return Table
+    def totalInsert():
+        return f"""<tr style="border-top: 2px solid #000000; border-bottom: 2px solid #000000;">
+    <td style="padding-top: 5px; padding-bottom: 5px;">Total</td>
+    <td style="padding-top: 5px; padding-bottom: 5px;">€42.00</td>
+</tr>"""
+    html = html.replace('-+InsertLine+-', '\n'.join(tableInsert()))
+    html = html.replace('-+InsertTotal+-', totalInsert())
+    now = datetime.now()
+    html = html.replace("-+todaysdate+-", now.strftime("%d/%m/%Y %H:%M:%S"))
+    # dd/mm/YY H:M:S
+    with open('report.html', 'w') as f:
+        f.write(html)
+lisT = ["Nurofren",2.99,7],["Nytol",6,5],["Sudafed",4.49,3],["Flarin",5.29,4],["Nexium",6,4],
+
+report_html()
