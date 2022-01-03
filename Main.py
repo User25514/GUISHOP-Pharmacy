@@ -10,6 +10,7 @@ import mainBack
 backProcess = mainBack.backProcess()
 data = {
     "User ID":1,
+    "User Name":"Yan",
     "Direction":"",
     "Register":{
         "Status":False,
@@ -33,7 +34,8 @@ data = {
         "Categories":("Tablet","Liquid","Capsules"),
         "Section":"",
         "Name":"",
-        "Date":""
+        "Date":"",
+        "Recipt Path":"[]",
     }
 }
 class frontProcess:
@@ -82,6 +84,15 @@ class frontProcess:
         def notification(self):
                 data[data["Direction"]]["Date"] = '{0}/{1}/{2}'.format(self.qDate.month(), self.qDate.day(), self.qDate.year())
                 self.close()
+    class DirectoryPopup(QWidget):
+
+        def __init__(self):
+            super().__init__()
+            self.openFileNameDialog()
+        def openFileNameDialog(self):
+            data["Shop"]["Recipt Path"] = QFileDialog.getExistingDirectory(self,"Select Where you would like the Reciept to save")
+            if data["Shop"]["Recipt Path"]:
+                print(data["Shop"]["Recipt Path"])
     
     def Book(layout,window):#[1] Confirmatin to the user that the slot was booked successfully.
         try:
@@ -123,9 +134,7 @@ class frontProcess:
                             except:
                                 pass
                             layout.addWidget(LabelThing,x+5,1)
-                        bookButton2 = QPushButton("Book Inperson")
-                        bookButton2.clicked.connect(BookInperson)
-                        layout.addWidget(bookButton2,20,1)
+                        
             except:
                 pass
 
@@ -158,20 +167,35 @@ class frontProcess:
                 alert.setText("Error, no date or time selected is free")
                 alert.exec()
         def BookOnline():
-            data[data["Direction"]]["Status"] = True
-            data["Direction"] = "Shop"
-            print(data)
-            frontProcess.Shop(layout)
+            if (data["Book"]["Time"] and data["Book"]["Date"]) != "":
+                choice = backProcess.BookRegister(data["User ID"],data["Book"]["Time"],data["Book"]["Date"])
+            else:
+                choice = False
+            alert = QMessageBox()
+            if choice == True:
+                alert = QMessageBox()
+                alert.setText("Booked Successfully") 
+                alert.exec()
+                data[data["Direction"]]["Status"] = True
+                data["Direction"] = "Shop"
+                print(data)
+                frontProcess.Shop(layout)
+            else:
+                alert = QMessageBox()
+                alert.setText("Error, no date or time selected is free")
+                alert.exec()    
         bookButton1 = QPushButton("Order Online")
         bookButton1.clicked.connect(BookOnline)
-
+        bookButton2 = QPushButton("Book Inperson")
+        bookButton2.clicked.connect(BookInperson)
+        
         #layout.addWidget(QLabel("Login: "),0,1)
         layout.addWidget(bookLabel1,0,1)
         layout.addWidget(bookCalLoginbutton,1,1)
         layout.addWidget(bookLabel2,2,1)
 
-        layout.addWidget(bookButton1,20,0)
-        
+        layout.addWidget(bookButton1,0,0)
+        layout.addWidget(bookButton2,1,0)
         
     def Shop(layout):#[3][4][5] Browse medicines of the cargories provided.
         # Each product will be associated with a particular price and QR code.
@@ -180,20 +204,27 @@ class frontProcess:
                 layout.itemAt(x).widget().deleteLater()
         except:
             pass
+        
         status, medication = backProcess.GrabMedication(data["Shop"]["Categories"])
         medication["Orders"] = {}
         if status == True:
             
-            print(medication)
 
             data["Shop"]["Section"] = data["Shop"]["Categories"][0]
             def CallMed():
-                x,y,ID = 5,0,1
+                x,y,ID = 6,0,1
                 for a in medication[data["Shop"]["Section"]]:
                     #print(medication[data["Shop"]["Section"]][a])
-                    if x / 4 >= len(medication[data["Shop"]["Section"]]) / 2:
+                    if x / 5 >= len(medication[data["Shop"]["Section"]]) / 2:
                         y += 1
-                        x = 5
+                        x = 6
+                    img=qrcode.make(medication[data["Shop"]["Section"]][a])
+                    img.save(f'cache.png') 
+                    label = QLabel()
+                    pixmap = QPixmap('cache.png')
+                    pixmap = pixmap.scaled(100, 100)
+                    label.setPixmap(pixmap)
+                    layout.addWidget(label,x-3,y)
                     layout.addWidget(QLabel(medication[data["Shop"]["Section"]][a]["Name"]),x-2,y)
                     layout.addWidget(QLabel(f"£{medication[data['Shop']['Section']][a]['Price']}"),x-1,y)
                     layout.addWidget(QLabel(medication[data["Shop"]["Section"]][a]["Quantity"]),x,y)
@@ -204,13 +235,14 @@ class frontProcess:
                     layout.addWidget(medication[data["Shop"]["Section"]][a]["Text"],x+1,y)
                     medication[data["Shop"]["Section"]][a]["Error"] = QLabel()
                     layout.addWidget(medication[data["Shop"]["Section"]][a]["Error"],x+2,y)
-                    x += 5
+                    x += 6
                     ID += 1
                 return x,y,ID
             x,y,ID = CallMed()
         def CrossWindow():
             print("confirming")
-            
+            medication["Status"] = False
+            print(medication[data["Shop"]["Section"]])
             for a in  medication[data["Shop"]["Section"]]:
                 if a == "Orders" or a == "Status":
                     continue
@@ -221,15 +253,19 @@ class frontProcess:
                     medication["Status"] = False
                     continue
                 else:
-                    medication["Orders"][data["Shop"]["Section"]] = {}
-                    medication["Orders"][data["Shop"]["Section"]][a] = int(medication[data["Shop"]["Section"]][a]["Text"].text())
-                if medication[data["Shop"]["Section"]][a]["Text"].text() == "0":
-                    del medication["Orders"][data["Shop"]["Section"]][a]
-                else:
-                    medication["Orders"][data["Shop"]["Section"]][a] = {}
-                    medication["Orders"][data["Shop"]["Section"]][a]["Quantity"] = medication[data["Shop"]["Section"]][a]["Text"].text()
-                    medication["Status"] = True
-            #backProcess.UpdateMedication(medication)
+                    b = {
+                        "Name": medication[data["Shop"]["Section"]][a]["Name"],
+                        "Price": float(medication[data["Shop"]["Section"]][a]["Price"]),
+                        "Quantity": int(medication[data["Shop"]["Section"]][a]["Text"].text())
+                    }
+                    if not(data["Shop"]["Section"] in medication["Orders"]):
+                        medication["Orders"][data["Shop"]["Section"]] = {}
+                    medication["Orders"][data["Shop"]["Section"]][a] = b
+                    if medication[data["Shop"]["Section"]][a]["Text"].text() == "0":
+                        del medication["Orders"][data["Shop"]["Section"]][a]
+                    else:
+                        #print(medication[data["Shop"]["Section"]][a])
+                        medication["Status"] = True
             if medication["Status"] == True:
                 pass
             else:
@@ -243,18 +279,36 @@ class frontProcess:
                 data["Shop"]["Section"] = LabelThing.Categories
                 try:
                     for x in range(0,100):
-                        print(x," - ",layout.itemAt(x).widget().text())
-                except:
-                    pass
-                try:
-                    for x in range(0,100):
-                        if ("Slot" in layout.itemAt(x).widget().text()) or (layout.itemAt(x).widget().text() == "Confirm"):
+                        if ("Slot" in layout.itemAt(x).widget().text()) or (layout.itemAt(x).widget().text() == "Confirm") or (layout.itemAt(x).widget().text() == "[]" or (layout.itemAt(x).widget().text() == "Directory")):
                             continue
                         #print(x," - ",layout.itemAt(x).widget().text())
                         layout.itemAt(x).widget().deleteLater()
                 except:
                     pass
                 CallMed()
+        def confirm():
+            CrossWindow()
+            if len(medication["Orders"]) > 0 and data["Shop"]["Recipt Path"] != "[]":
+                medication["Orders"]["User_ID"] = data["User ID"]
+                medication["Orders"]["User_Name"] = data["User Name"]
+                #choice = backProcess.report_html(medication["Orders"])
+                print("Running")
+                choice = backProcess.RegisterOrder(data["User ID"],medication["Orders"],data["Shop"]["Recipt Path"])
+                print("Ran")
+            else:
+                choice = False
+            
+            alert = QMessageBox()
+            if choice == True:
+                alert = QMessageBox()
+                alert.setText("Recipt made Successfully") 
+                alert.exec()
+                pass
+                #Book.show()
+            else:
+                alert = QMessageBox()
+                alert.setText("Error, no date or time selected is free")
+                alert.exec()
         counter = 0
         for a in data["Shop"]["Categories"]:
             LabelThing = QRadioButton("Slot " + str(counter) + ": " + str(a))
@@ -263,10 +317,24 @@ class frontProcess:
             layout.addWidget(LabelThing,(x*4)*ID+2,counter)
             counter += 1
         ConfirmButton = QPushButton("Confirm")
-        #ConfirmButton.clicked.connect(confirm)
+        ConfirmButton.clicked.connect(confirm)
 
         layout.addWidget(ConfirmButton,(x*4)*ID+3,0)
-
+        def GrabDirectory():
+            DirectoryTimer.start()
+            frontProcess.DirectoryPopup()
+        DirectoryButton = QPushButton("Directory")
+        DirectoryButton.clicked.connect(GrabDirectory)
+        layout.addWidget(DirectoryButton,(x*4)*ID+3,1)
+        DirectoryDirection = QLabel("[]")
+        layout.addWidget(DirectoryDirection,(x*4)*ID+4,0)
+        def ChangeDirectoryName():
+            if DirectoryDirection.text() != data["Shop"]["Recipt Path"]:
+                DirectoryDirection.setText(data["Shop"]["Recipt Path"])
+        DirectoryTimer = QTimer()
+        DirectoryTimer.setInterval(1000)
+        DirectoryTimer.timeout.connect(ChangeDirectoryName)
+        
     def Payment():# Scan QR code on receipt.
         pass
 def main(): # Login Register
@@ -297,7 +365,7 @@ def main(): # Login Register
     logPassword = QLineEdit()
     logPassword.setEchoMode(QLineEdit.Password)
     def logNotification():
-        choice,data["User ID"] = backProcess.Login(data["Login"]["Date"],logPassword.text())
+        choice,data["User ID"],data["User Name"] = backProcess.Login(data["Login"]["Date"],logPassword.text())
         alert = QMessageBox()
         if choice == True:
             data[data["Direction"]]["Status"] = True
@@ -334,6 +402,7 @@ def main(): # Login Register
     regLabel5 = QLabel("Must contain 2 capital letters\n1 number\nbetween 8 and 15 characters long.")
     def regNotification():
         choice,data["User ID"] = backProcess.Register(regUsername.text(),data["Register"]["Date"],regEmail.text(),regPassword.text())
+        data["User Name"] = regUsername.text()
         print(choice)
         alert = QMessageBox()
         if choice == True:
@@ -377,10 +446,10 @@ def main(): # Login Register
     #
     window.setLayout(layout)
     window.show()
-    data["Direction"] = "Book"
+    data["Direction"] = "Shop"
     #print(data)
-    #frontProcess.Shop(layout)
-    frontProcess.Book(layout,window)
+    frontProcess.Shop(layout)
+    #frontProcess.Book(layout,window)
     app.exec(app.exec_())
 if __name__ == "__main__":
     main()
