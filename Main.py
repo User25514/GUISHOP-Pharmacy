@@ -6,10 +6,12 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import qrcode
+import cv2
 import mainBack
+import ast
 backProcess = mainBack.backProcess()
 data = {
-    "User ID":1,
+    "User ID":"1",
     "User Name":"Yan",
     "Direction":"",
     "Register":{
@@ -27,7 +29,8 @@ data = {
         "Date":"",
         "Time":"",
         "Rough_Time":[],
-        "Rough_Timings":[]
+        "Rough_Timings":[],
+        "Recipt Path":"[]",
     },
     "Shop":{
         "Status":False,
@@ -36,36 +39,33 @@ data = {
         "Name":"",
         "Date":"",
         "Recipt Path":"[]",
+    },
+    "Payment":{
+        "Status":False,
+        "Recipt Path":"[]",
     }
 }
 class frontProcess:
-    def __init__(self):
-        pass
     class calendarPopup(QWidget):
         def __init__(self):
             super().__init__()
             self.setWindowTitle('Calendar')
-            self.setGeometry(300, 300, 350, 250)
-            #if (data["Register"]["Status"] or data["Login"]["Status"]) == True:
-                #self.setGeometry(300, 300, 1000, 1000)
-            #else:
-                #self.setGeometry(300, 300, 350, 250)
+            self.setGeometry(300, 300, 385, 280)
+
             self.initUI()
         def initUI(self):
             self.calendar = QCalendarWidget(self)
             self.button = QPushButton(self)
             self.button.setText("Approve")
-            self.button.move(20,210)
+            self.button.move(20,240)
             self.button.clicked.connect(self.notification)
-            self.calendar.move(20, 20)
+            self.calendar.move(0, 0)
             self.calendar.setGridVisible(True)
             Year = datetime.now().year
             Month = datetime.now().month
             Day = datetime.now().day
             self.qDate = QDate(Year, Month, Day)
-            print(data["Direction"])
             if data["Direction"] == "Book":
-                print("Book Time")
                 self.calendar.setMinimumDate(QDate(Year, Month, Day))
                 if (Day + 15) > calendar.monthrange(Year, Month)[1]:
                     newDay = (Day + 15) - calendar.monthrange(Year, Month)[1]
@@ -80,7 +80,6 @@ class frontProcess:
 
         def printDateInfo(self, qDate):
             self.qDate = qDate            
-
         def notification(self):
                 data[data["Direction"]]["Date"] = '{0}/{1}/{2}'.format(self.qDate.month(), self.qDate.day(), self.qDate.year())
                 self.close()
@@ -90,11 +89,10 @@ class frontProcess:
             super().__init__()
             self.openFileNameDialog()
         def openFileNameDialog(self):
-            data["Shop"]["Recipt Path"] = QFileDialog.getExistingDirectory(self,"Select Where you would like the Reciept to save")
-            if data["Shop"]["Recipt Path"]:
-                print(data["Shop"]["Recipt Path"])
+            data[data["Direction"]]["Recipt Path"] = QFileDialog.getExistingDirectory(self,"Select Where you would like the Reciept to save")
+
     
-    def Book(layout,window):#[1] Confirmatin to the user that the slot was booked successfully.
+    def Book(layout):#[1] Confirmatin to the user that the slot was booked successfully.
         try:
             for x in range(0,100):
                 layout.itemAt(x).widget().deleteLater()
@@ -103,7 +101,6 @@ class frontProcess:
         bookLabel1 = QLabel("Date: ")
         bookCal = frontProcess.calendarPopup()
         def bookCalendar():
-            print(data)
             qTimer.start()
             bookCal.show()
         bookCalLoginbutton = QPushButton("Calendar")
@@ -116,10 +113,12 @@ class frontProcess:
 
                     Status, data["Book"]["Rough_Time"] = backProcess.BookRecall(data["Book"]["Date"])
                     if Status == True:
+                        offset = 8
                         for x in range(0,len(data["Book"]["Rough_Timings"])):
 
                             try:
-                                layout.itemAt(x+4).widget().deleteLater()
+                                print(x+offset," ",layout.itemAt(x+offset).widget().text())
+                                layout.itemAt(x+offset).widget().deleteLater()
                             except:
                                 pass
                         data["Book"]["Rough_Timings"] = data["Book"]["Rough_Time"]
@@ -128,12 +127,7 @@ class frontProcess:
                             LabelThing = QRadioButton("Slot " + str(x+1) + ": " + str(data["Book"]["Rough_Time"][x]))
                             LabelThing.Time = data["Book"]["Rough_Time"][x]
                             LabelThing.clicked.connect(TimeChoice)
-    
-                            try:
-                                print(x+4," ",layout.itemAt(x+4).widget().text())
-                            except:
-                                pass
-                            layout.addWidget(LabelThing,x+5,1)
+                            layout.addWidget(LabelThing,x+offset,0)
                         
             except:
                 pass
@@ -147,10 +141,9 @@ class frontProcess:
         def TimeChoice():
             LabelThing = layout.sender()
             if LabelThing.isChecked():
-                print("Country is %s" % (LabelThing.Time))
                 data["Book"]["Time"] = LabelThing.Time
-        def BookInperson():
-            print(data["Book"])
+        def RegisterToDatabase(Direction):
+            print("imagine")
             if (data["Book"]["Time"] and data["Book"]["Date"]) != "":
                 choice = backProcess.BookRegister(data["User ID"],data["Book"]["Time"],data["Book"]["Date"])
             else:
@@ -160,42 +153,51 @@ class frontProcess:
                 alert = QMessageBox()
                 alert.setText("Booked Successfully") 
                 alert.exec()
+                if Direction == True:
+                    data[data["Direction"]]["Status"] = True
+                    data["Direction"] = "Shop"
+                    frontProcess.Shop(layout)
                 pass
                 #Book.show()
             else:
                 alert = QMessageBox()
                 alert.setText("Error, no date or time selected is free")
                 alert.exec()
-        def BookOnline():
-            if (data["Book"]["Time"] and data["Book"]["Date"]) != "":
-                choice = backProcess.BookRegister(data["User ID"],data["Book"]["Time"],data["Book"]["Date"])
-            else:
-                choice = False
-            alert = QMessageBox()
-            if choice == True:
-                alert = QMessageBox()
-                alert.setText("Booked Successfully") 
-                alert.exec()
-                data[data["Direction"]]["Status"] = True
-                data["Direction"] = "Shop"
-                print(data)
-                frontProcess.Shop(layout)
-            else:
-                alert = QMessageBox()
-                alert.setText("Error, no date or time selected is free")
-                alert.exec()    
-        bookButton1 = QPushButton("Order Online")
-        bookButton1.clicked.connect(BookOnline)
-        bookButton2 = QPushButton("Book Inperson")
-        bookButton2.clicked.connect(BookInperson)
-        
-        #layout.addWidget(QLabel("Login: "),0,1)
-        layout.addWidget(bookLabel1,0,1)
-        layout.addWidget(bookCalLoginbutton,1,1)
-        layout.addWidget(bookLabel2,2,1)
+        def ExistingFile(Stat):
 
+            frontProcess.DirectoryPopup()
+            print(data["Book"]["Recipt Path"])
+            if data["Book"]["Recipt Path"] != "[]":
+                if Stat == True: # Existing File
+                    pass
+                elif Stat == False: # Existing Booking
+                    pass
+                else:
+                    pass
+        def BookingReceipt():
+            #choice = backProcess.RegisterOrder(data["User ID"],medication["Orders"],data["Shop"]["Recipt Path"])
+            pass
+        bookButton1 = QPushButton("Pay Online")
+        bookButton1.clicked.connect(frontProcess.Payment)
+        bookButton2 = QPushButton("Order Online")
+        bookButton2.clicked.connect(lambda: RegisterToDatabase(True))
+       
+        bookButton3 = QPushButton("Edit Current Order")
+        bookButton3.clicked.connect(lambda: ExistingFile(True))
+        bookButton4 = QPushButton("Order Inperson")
+        bookButton4.clicked.connect(lambda: RegisterToDatabase(False))
+        bookButton5 = QPushButton("Order online with Existing Booking")
+        bookButton5.clicked.connect(lambda: ExistingFile(False))
         layout.addWidget(bookButton1,0,0)
         layout.addWidget(bookButton2,1,0)
+        layout.addWidget(bookButton3,1,1)
+        layout.addWidget(bookButton4,2,0)
+        layout.addWidget(bookButton5,2,1)
+        layout.addWidget(bookLabel1,4,0)
+        layout.addWidget(bookCalLoginbutton,5,0)
+        layout.addWidget(bookLabel2,6,0)
+
+        
         
     def Shop(layout):#[3][4][5] Browse medicines of the cargories provided.
         # Each product will be associated with a particular price and QR code.
@@ -214,7 +216,6 @@ class frontProcess:
             def CallMed():
                 x,y,ID = 6,0,1
                 for a in medication[data["Shop"]["Section"]]:
-                    #print(medication[data["Shop"]["Section"]][a])
                     if x / 5 >= len(medication[data["Shop"]["Section"]]) / 2:
                         y += 1
                         x = 6
@@ -227,7 +228,7 @@ class frontProcess:
                     layout.addWidget(label,x-3,y)
                     layout.addWidget(QLabel(medication[data["Shop"]["Section"]][a]["Name"]),x-2,y)
                     layout.addWidget(QLabel(f"£{medication[data['Shop']['Section']][a]['Price']}"),x-1,y)
-                    layout.addWidget(QLabel(medication[data["Shop"]["Section"]][a]["Quantity"]),x,y)
+                    layout.addWidget(QLabel(f'Quantity: {medication[data["Shop"]["Section"]][a]["Quantity"]}'),x,y)
                     try:
                          medication[data["Shop"]["Section"]][a]["Text"] = QLineEdit(str(medication["Orders"][data["Shop"]["Section"]][a]["Quantity"]))
                     except:
@@ -237,12 +238,10 @@ class frontProcess:
                     layout.addWidget(medication[data["Shop"]["Section"]][a]["Error"],x+2,y)
                     x += 6
                     ID += 1
-                return x,y,ID
-            x,y,ID = CallMed()
+                return x,ID
+            x,ID = CallMed()
         def CrossWindow():
-            print("confirming")
             medication["Status"] = False
-            print(medication[data["Shop"]["Section"]])
             for a in  medication[data["Shop"]["Section"]]:
                 if a == "Orders" or a == "Status":
                     continue
@@ -251,7 +250,7 @@ class frontProcess:
                 elif int( medication[data["Shop"]["Section"]][a]["Text"].text()) > int(medication[data["Shop"]["Section"]][a]["Quantity"]):
                     medication[data["Shop"]["Section"]][a]["Error"].setText("Too many items")
                     medication["Status"] = False
-                    continue
+                    break
                 else:
                     b = {
                         "Name": medication[data["Shop"]["Section"]][a]["Name"],
@@ -264,51 +263,47 @@ class frontProcess:
                     if medication[data["Shop"]["Section"]][a]["Text"].text() == "0":
                         del medication["Orders"][data["Shop"]["Section"]][a]
                     else:
-                        #print(medication[data["Shop"]["Section"]][a])
                         medication["Status"] = True
             if medication["Status"] == True:
                 pass
             else:
                 pass
-            print(medication["Orders"])
         def TimeChoice():
             LabelThing = layout.sender()
             if LabelThing.isChecked():
-                print("Country is %s" % (LabelThing.Categories))
                 CrossWindow()
-                data["Shop"]["Section"] = LabelThing.Categories
-                try:
-                    for x in range(0,100):
-                        if ("Slot" in layout.itemAt(x).widget().text()) or (layout.itemAt(x).widget().text() == "Confirm") or (layout.itemAt(x).widget().text() == "[]" or (layout.itemAt(x).widget().text() == "Directory")):
-                            continue
-                        #print(x," - ",layout.itemAt(x).widget().text())
-                        layout.itemAt(x).widget().deleteLater()
-                except:
-                    pass
-                CallMed()
+                if medication["Status"] != False:
+                    data["Shop"]["Section"] = LabelThing.Categories
+                    try:
+                        for x in range(0,100):
+                            if ("Slot" in layout.itemAt(x).widget().text()) or (layout.itemAt(x).widget().text() == "Confirm") or (layout.itemAt(x).widget().text() == "[]" or (layout.itemAt(x).widget().text() == "Directory")):
+                                continue
+                            #print(x," - ",layout.itemAt(x).widget().text())
+                            layout.itemAt(x).widget().deleteLater()
+                    except:
+                        pass
+                    CallMed()
         def confirm():
             CrossWindow()
-            if len(medication["Orders"]) > 0 and data["Shop"]["Recipt Path"] != "[]":
-                medication["Orders"]["User_ID"] = data["User ID"]
-                medication["Orders"]["User_Name"] = data["User Name"]
-                #choice = backProcess.report_html(medication["Orders"])
-                print("Running")
-                choice = backProcess.RegisterOrder(data["User ID"],medication["Orders"],data["Shop"]["Recipt Path"])
-                print("Ran")
-            else:
-                choice = False
-            
-            alert = QMessageBox()
-            if choice == True:
+            if medication["Status"] != False:
+                if len(medication["Orders"]) > 0 and data["Shop"]["Recipt Path"] != "[]":
+                    #medication["Orders"]["User_Name"] = data["User Name"]
+                    #choice = backProcess.report_html(medication["Orders"])
+                    choice = backProcess.RegisterOrder(data["User ID"],medication["Orders"],data["Shop"]["Recipt Path"])
+                else:
+                    choice = False
+                
                 alert = QMessageBox()
-                alert.setText("Recipt made Successfully") 
-                alert.exec()
-                pass
-                #Book.show()
-            else:
-                alert = QMessageBox()
-                alert.setText("Error, no date or time selected is free")
-                alert.exec()
+                if choice == True:
+                    alert = QMessageBox()
+                    alert.setText("Recipt made Successfully") 
+                    alert.exec()
+                    pass
+                    #Book.show()
+                else:
+                    alert = QMessageBox()
+                    alert.setText("Error, no date or time selected is free")
+                    alert.exec()
         counter = 0
         for a in data["Shop"]["Categories"]:
             LabelThing = QRadioButton("Slot " + str(counter) + ": " + str(a))
@@ -336,6 +331,18 @@ class frontProcess:
         DirectoryTimer.timeout.connect(ChangeDirectoryName)
         
     def Payment():# Scan QR code on receipt.
+        print("Fuck")
+        data["Direction"] = "Payment"
+        frontProcess.DirectoryPopup()
+        print(f"{data[data['Direction']]['Recipt Path']}/OrderCode.png")
+        def ReadQR():
+            img=cv2.imread(f"{data[data['Direction']]['Recipt Path']}/OrderCode.png")
+            det=cv2.QRCodeDetector()
+            val, pts, st_code=det.detectAndDecode(img)
+            print(val)
+        print("Start")
+        ReadQR()
+
         pass
 def main(): # Login Register
     app = QApplication(sys.argv)
@@ -370,10 +377,7 @@ def main(): # Login Register
         if choice == True:
             data[data["Direction"]]["Status"] = True
             data["Direction"] = "Book"
-            print(data)
-            #frontProcess.Shop(layout)
-            frontProcess.Book(layout,window)
-            #Book.show()
+            frontProcess.Book(layout)
         else:
             alert = QMessageBox()
             alert.setText("Error")
@@ -403,7 +407,6 @@ def main(): # Login Register
     def regNotification():
         choice,data["User ID"] = backProcess.Register(regUsername.text(),data["Register"]["Date"],regEmail.text(),regPassword.text())
         data["User Name"] = regUsername.text()
-        print(choice)
         alert = QMessageBox()
         if choice == True:
             alert.setText("Registered")
@@ -414,9 +417,7 @@ def main(): # Login Register
                 "Password":""
             }
             data["Direction"] = "Book"
-            print(data)
-            #frontProcess.Shop(layout)
-            frontProcess.Book(layout,window)
+            frontProcess.Book(layout)
         elif choice == False:
             alert.setText("Error")
         else:
@@ -446,10 +447,10 @@ def main(): # Login Register
     #
     window.setLayout(layout)
     window.show()
-    data["Direction"] = "Shop"
-    #print(data)
-    frontProcess.Shop(layout)
-    #frontProcess.Book(layout,window)
+    data["Direction"] = "Book"
+    #frontProcess.Shop(layout)
+    frontProcess.Book(layout)
     app.exec(app.exec_())
 if __name__ == "__main__":
     main()
+    pass
