@@ -15,7 +15,7 @@ class backProcess:
             self.cur.execute("CREATE TABLE Tablet (TabletID,Name,Price,Quantity)")
             self.cur.execute("CREATE TABLE Liquid (LiquidID,Name,Price,Quantity)")
             self.cur.execute("CREATE TABLE Capsules (CapsulesID,Name,Price,Quantity)")
-            self.cur.execute("CREATE TABLE Orders (OrderID,UserIDFK,OrderQRCode)")
+            self.cur.execute("CREATE TABLE Orders (OrderID,BookingIDFK,Order,OrderQRCode)")
             self.con.commit()
         except:
             pass
@@ -42,8 +42,7 @@ class backProcess:
     def BookRegister(self,USID,BookTime,BookDate):
         print("-------------",USID,"-",BookTime,"-",BookDate)
         if ((BookTime or BookDate) == ""):
-            print("Die")
-            return False
+            return False, False
         con = sqlite3.connect('database.db')
         cur = con.cursor()
         RegID = 0
@@ -51,16 +50,32 @@ class backProcess:
             RegID = row[0]
         cur.execute(f"INSERT INTO Bookings VALUES ('{int(RegID)+1}','{USID}','{BookDate}','{BookTime}')")
         con.commit()
-        #for row in cur.execute('SELECT * FROM Register ORDER BY RegID'):
-            #print(row)
 
         con.close()
-        return True
-    def ShopState():#[2][3] Choice to shop in person or thorough the application.
-        pass
-    def ShoppingRecipt():#[4] A recipt will be produced with details of what has been bought with the total price.
-        # The receipt will be associated with a unique qr code that the user will use at the payment stage.
-        pass
+        return True,int(RegID)+1
+    def PaymentRecall(self,IDs):
+        #[9]
+        con = sqlite3.connect('database.db')
+        cur = con.cursor()
+        for row in cur.execute('SELECT * FROM Orders'):
+            print("Orders: ",row)
+            if row[0] == IDs[0] and row[1] == IDs[1]:
+                for Bookingrow in cur.execute('SELECT * FROM Bookings'):
+                    print("Booking: ",Bookingrow)
+                    if Bookingrow[0] == IDs[1] and Bookingrow[1] == IDs[2]:
+                        con.close()
+                        backProcess.EditOrders(RegID)
+                        return True, "Successful"
+                con.close()
+                return False, "Error with Booking"
+        con.close()
+        return False, "No Order was found"
+    def EditOrders(self,RegID):
+        con = sqlite3.connect('database.db')
+        cur = con.cursor()
+        cur.execute(f"INSERT INTO Orders VALUES ('{int(OrderID)}','{ID}','{str(New)}','{img}')")
+        con.commit()
+        con.close()
     def Register(self,name,dob,email,password):#[5] Make Account
         #[6];
         if (name or dob or email or password) == "":
@@ -122,7 +137,9 @@ class backProcess:
             return False, []
         con.close()
         return True, Medication
-    def RegisterOrder(self,ID,Order,Path):
+
+
+    def RegisterOrder(self,ID,Name,Order,Path):
         print(f"Register: {ID}, {Order}, {Path}")
         if (ID or Order) == "":
             return False
@@ -135,16 +152,16 @@ class backProcess:
         if OrderID == "":
             OrderID = 1
         #Order["Order_ID"] = int(OrderID)+1
-        img=qrcode.make(f"Pharmacy Order: {int(OrderID)+1},{int(ID)}")
+        img=qrcode.make(f"Pharmacy Order: {int(OrderID)},{int(ID)}")
         img.save(f'{Path}/OrderCode.png') 
         New = str(Order).replace("'",'"')        
         cur.execute(f"INSERT INTO Orders VALUES ('{int(OrderID)}','{ID}','{str(New)}','{img}')")
         con.commit()
         con.close()
         
-        backProcess.report_html(0,"Order",Order,Path)
+        backProcess.report_html(0,"Order",Order,Path,Name)
         return True
-    def report_html(self,Stat,Order,Path):
+    def report_html(self,Stat,Order,Path,Name):
         from datetime import datetime
         
         html = """<html><head>
@@ -218,7 +235,7 @@ h1, h2, h3, h4, h5, h6, p{ margin: 0;}
             <td style="padding-top: 5px; padding-bottom: 5px;">{TotalQ}</td>\n</tr>"""
         now = datetime.now()
         html = html.replace("<!--+todaysdate+-->", now.strftime("%d/%m/%Y %H:%M:%S"))
-        html = html.replace("<!--+name+-->", Order["User_Name"])
+        html = html.replace("<!--+name+-->", Name)
         
         if Stat == "Order":
             html = html.replace("<!--+Windowtitle+-->","Pharmacy Order")
@@ -244,4 +261,4 @@ h1, h2, h3, h4, h5, h6, p{ margin: 0;}
 #'9': {'Name': 'Covania', 'Price': 7.5, 'Quantity': 18}}, 'Capsules': {'1': {'Name': 'Lemsip Max Day3.50', 'Price': 3.5, 'Quantity': 19}, '2': {'Name': 'Buscopan', 'Price': 6.0, 'Quantity': 20}, '3': {'Name': 'Sudafed', 'Price': 4.49, 'Quantity': 21}, '4': {'Name': 'Lemsip Cough Max', 'Price': 4.99, 'Quantity': 22}, '5': {'Name': 'Benylin Cold and Flu', 'Price': 5.0, 'Quantity': 23}, '6': {'Name': 'Galphram', 'Price': 1.29, 'Quantity': 24}, '7': {'Name': 'Colpermin', 'Price': 6.19, 'Quantity': 25}, '8': {'Name': 'Flarin ', 
 #'Price': 5.29, 'Quantity': 26}, '9': {'Name': 'DuloEase', 'Price': 3.5, 'Quantity': 27}}, 'User_ID': '1', 'User_Name': 'Yan'}
 #backProcess.report_html(0,"Order",Order,"C:/Users/robso/Desktop")
-backProcess.RegisterOrder(0,str(1), {'Tablet': {'4': {'Name': 'Dulcolax Adult', 'Price': 2.99, 'Quantity': 12}, '5': {'Name': 'Gaviscon', 'Price': 8.49, 'Quantity': 8}, '6': {'Name': 'Panadol Paracetamol', 'Price': 2.6, 'Quantity': 3}},"User_Name":"Yan"}, "C:/Users/robso/Desktop")
+#backProcess.RegisterOrder(0,str(1), {'Tablet': {'4': {'Name': 'Dulcolax Adult', 'Price': 2.99, 'Quantity': 12}, '5': {'Name': 'Gaviscon', 'Price': 8.49, 'Quantity': 8}, '6': {'Name': 'Panadol Paracetamol', 'Price': 2.6, 'Quantity': 3}},"User_Name":"Yan"}, "C:/Users/robso/Desktop")
