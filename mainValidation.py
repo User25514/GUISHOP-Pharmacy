@@ -1,3 +1,4 @@
+from datetime import datetime,date
 class dataValidation:
     class Register:#[6]
         def nameVal(name):
@@ -13,6 +14,13 @@ class dataValidation:
                 return False
         def dobVal(DOB):
             try:
+                DOB = DOB.split("/")
+                date1 = date(DOB[2],DOB[1],DOB[0])
+                date2 = datetime.now()
+                date3 = date2.year - date1.year
+                print(DOB)
+                if date3.years >= 18:
+                    return True
                 return True
             except Exception:
                 return False
@@ -51,17 +59,5 @@ class dataValidation:
                         return True
                 else:
                     raise Exception
-            except Exception:
-                return False
-
-    class Login:#[7]
-        def dobVal(DOB):
-            try:
-                pass
-            except Exception:
-                return False
-        def passwordVal(password):
-            try:
-                pass
             except Exception:
                 return False

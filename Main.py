@@ -499,7 +499,19 @@ def main(): # Login Register
     #frontProcess.Shop(layout,window)
     #frontProcess.Book(layout,window)
     app.exec(app.exec_())
+class Testing():
+    def TrueDataVal():
+        #pytest
+        assert backProcess.Login("1/7/2004","TestPass12") == (True,"1","Mox")
+    @pytest.mark.xfail
+    def FalseDataVal():
+        #pytest
+        assert backProcess.Login("1/7/2004","TestPass") == (False,"No account found","")
+        
+
+
+
 
 if __name__ == "__main__":
-    Test()
+    Testing.FalseDataVal()
     pass
