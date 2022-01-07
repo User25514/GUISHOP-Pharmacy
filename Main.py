@@ -8,7 +8,7 @@ from PyQt5.QtGui import *
 import qrcode
 import cv2
 import mainBack
-
+import pytest
 backProcess = mainBack.backProcess()
 data = {
     "User ID":"1",
@@ -408,16 +408,19 @@ def main(): # Login Register
     logPassword = QLineEdit()
     logPassword.setEchoMode(QLineEdit.Password)
     def logNotification():
+        data["Direction"] = "Login"
         try:
             choice,data["User ID"],data["User Name"] = backProcess.Login(data["Login"]["Date"],logPassword.text())
             alert = QMessageBox()
             if choice == True:
                 data[data["Direction"]]["Status"] = True
                 data["Direction"] = "Book"
+                alert.setText("Logged in")
+                alert.exec()
                 frontProcess.Book(layout,window)
             else:
-                alert = QMessageBox()
-                alert.setText("Error")
+                alert.setText(data["User ID"])
+                data["User ID"] = ""
                 alert.exec()
         except:
             pass
@@ -444,10 +447,11 @@ def main(): # Login Register
     regPassword.setEchoMode(QLineEdit.Password)
     regLabel5 = QLabel("Must contain 2 capital letters, 1 number,between 8 and 15 characters long.")
     def regNotification():
+        data["Direction"] = "Register"
         choice,data["User ID"] = backProcess.Register(regUsername.text(),data["Register"]["Date"],regEmail.text(),regPassword.text())
-        data["User Name"] = regUsername.text()
         alert = QMessageBox()
         if choice == True:
+            data["User Name"] = regUsername.text()
             alert.setText("Registered")
             data["Register"] = {
                 "Status":True,
@@ -458,7 +462,8 @@ def main(): # Login Register
             data["Direction"] = "Book"
             frontProcess.Book(layout,window)
         elif choice == False:
-            alert.setText("Error")
+            alert.setText(data["User ID"] )
+            data["User ID"] = ""
         else:
             pass
         alert.exec()
@@ -494,6 +499,7 @@ def main(): # Login Register
     #frontProcess.Shop(layout,window)
     #frontProcess.Book(layout,window)
     app.exec(app.exec_())
+
 if __name__ == "__main__":
-    main()
+    Test()
     pass

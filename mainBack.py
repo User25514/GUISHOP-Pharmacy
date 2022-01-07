@@ -133,18 +133,22 @@ class backProcess:
         c = REG.emailVal(email)
         d = REG.passwordVal(password)
         RegID = 0
-        print(a,b,c,d)
-        if (a or b or c or d) == False:
-            return False
+        if a == False:
+            return False, "Invalid Name"
+        elif b == False:
+            return False, "Invalid Date of Birth"
+        elif c == False:
+            return False , "Invalid Email"
+        elif d == False:
+            return False, "Invalid Password"
         else:
             pass
         for row in cur.execute('SELECT * FROM Register'):
-            print(row)
             RegID = row[0]
             row[3]
             if row[3] == email:
                 con.close()
-                return False
+                return False, "Email already in use"
         cur.execute(f"INSERT INTO Register VALUES ('{int(RegID)+1}','{name}','{dob}','{email}','{password}')")
         con.commit()
         #for row in cur.execute('SELECT * FROM Register ORDER BY RegID'):
@@ -154,7 +158,7 @@ class backProcess:
         return True, int(RegID)+1
     def Login(self,dob,password):#[5] login
         if (dob or password) == "":
-            return False
+            return False, "Empty Fields",""
         #[7]
         con = sqlite3.connect('database.db')
         cur = con.cursor()
@@ -164,7 +168,7 @@ class backProcess:
                 con.close()
                 return True, row[0],row[1]
         con.close()
-        return False
+        return False, "No account found", ""
     def GrabMedication(self,Tables):
         con = sqlite3.connect('database.db')
         cur = con.cursor()
