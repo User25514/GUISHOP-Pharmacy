@@ -12,8 +12,8 @@ import ast
 
 backProcess = mainBack.backProcess()
 data = {
-    "User ID":"",
-    "User Name":"",
+    "User ID":"1",
+    "User Name":"Yan",
     "Booking ID":"",
     "Direction":"",
     "Register":{
@@ -133,11 +133,9 @@ class frontProcess:
                             LabelThing = QRadioButton("Slot " + str(x+1) + ": " + str(data["Book"]["Rough_Time"][x]))
                             LabelThing.Time = data["Book"]["Rough_Time"][x]
                             LabelThing.clicked.connect(TimeChoice)
-                            layout.addWidget(LabelThing,x+offset,0)
-                        
+                            layout.addWidget(LabelThing,x+offset,0)     
             except:
                 pass
-
         qTimer = QTimer()
         qTimer.setInterval(1000)
         qTimer.timeout.connect(changeName)
@@ -149,27 +147,26 @@ class frontProcess:
             if LabelThing.isChecked():
                 data["Book"]["Time"] = LabelThing.Time
         def RegisterToDatabase(Direction):
-
-            print("imagine")
-            if (data["Book"]["Time"] and data["Book"]["Date"]) != "":
-                choice,data["Booking ID"] = backProcess.BookRegister(data["User ID"],data["Book"]["Time"],data["Book"]["Date"])
-            else:
-                choice = False
-            alert = QMessageBox()
-            if choice == True:
+            frontProcess.DirectoryPopup()
+            if data["Book"]["Recipt Path"] != "[]":
+                print("imagine")
+                if (data["Book"]["Time"] and data["Book"]["Date"]) != "":
+                    choice,data["Booking ID"] = backProcess.BookRegister(data["User ID"],data["User Name"],data["Book"]["Time"],data["Book"]["Date"],data["Book"]["Recipt Path"])
+                else:
+                    choice = False
                 alert = QMessageBox()
-                alert.setText("Booked Successfully") 
-                alert.exec()
-                if Direction == True:
-                    data[data["Direction"]]["Status"] = True
-                    data["Direction"] = "Shop"
-                    frontProcess.Shop(layout,window)
-                pass
-                #Book.show()
-            else:
-                alert = QMessageBox()
-                alert.setText("Error, no date or time selected is free")
-                alert.exec()
+                if choice == True:
+                    alert.setText("Booked Successfully") 
+                    alert.exec()
+                    if Direction == True:
+                        data[data["Direction"]]["Status"] = True
+                        data["Direction"] = "Shop"
+                        frontProcess.Shop(layout,window)
+                    pass
+                    #Book.show()
+                else:
+                    alert.setText("Error, no date or time selected is free")
+                    alert.exec()
         def ExistingFile(Stat):
             
             frontProcess.DirectoryPopup()
@@ -193,13 +190,13 @@ class frontProcess:
         bookButton3.clicked.connect(lambda: ExistingFile(True))
         bookButton4 = QPushButton("Order Inperson")
         bookButton4.clicked.connect(lambda: RegisterToDatabase(False))
-        bookButton5 = QPushButton("Order online with Existing Booking")
+        bookButton5 = QPushButton("Order online with\nExisting Booking")
         bookButton5.clicked.connect(lambda: ExistingFile(False))
         layout.addWidget(bookButton1,0,0)
         layout.addWidget(bookButton2,1,0)
         layout.addWidget(bookButton3,1,1)
         layout.addWidget(bookButton4,2,0)
-        bookButton5.setWordWrap(True)
+        print("imagine")
         layout.addWidget(bookButton5,2,1)
         layout.addWidget(bookLabel1,4,0)
         layout.addWidget(bookCalLoginbutton,5,0)
@@ -476,9 +473,9 @@ def main(): # Login Register
     #
     window.setLayout(layout)
     window.show()
-    #data["Direction"] = "Shop"
+    data["Direction"] = "Book"
     #frontProcess.Shop(layout,window)
-    #frontProcess.Book(layout,window)
+    frontProcess.Book(layout,window)
     app.exec(app.exec_())
 if __name__ == "__main__":
     main()

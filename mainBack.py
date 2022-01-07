@@ -39,19 +39,21 @@ class backProcess:
             return False, False
         else:
             return True, Times
-    def BookRegister(self,USID,BookTime,BookDate):
-        print("-------------",USID,"-",BookTime,"-",BookDate)
+    def BookRegister(self,USID,Name,BookTime,BookDate,Path):
         if ((BookTime or BookDate) == ""):
             return False, False
         con = sqlite3.connect('database.db')
         cur = con.cursor()
         RegID = 0
+
         for row in cur.execute('SELECT * FROM Bookings'):
             RegID = row[0]
-        cur.execute(f"INSERT INTO Bookings VALUES ('{int(RegID)+1}','{USID}','{BookDate}','{BookTime}')")
+        img=qrcode.make(f"Pharmacy Order: {int(RegID)+1},{BookDate},{BookTime}")
+        img.save(f'{Path}/BookCode.png') 
+        cur.execute(f"INSERT INTO Bookings VALUES ('{int(RegID)+1}','{USID}','{BookDate}','{BookTime}','{img}')")
         con.commit()
-
         con.close()
+        backProcess.report_html(0,"Book",(BookTime,BookDate),Path,Name)
         return True,int(RegID)+1
     def PaymentRecall(self,IDs):
         #[9]
@@ -64,17 +66,27 @@ class backProcess:
                     print("Booking: ",Bookingrow)
                     if Bookingrow[0] == IDs[1] and Bookingrow[1] == IDs[2]:
                         con.close()
-                        backProcess.EditOrders(RegID)
+                        Order = row[2]
+                        backProcess.EditOrders(0,Order)
                         return True, "Successful"
                 con.close()
                 return False, "Error with Booking"
         con.close()
         return False, "No Order was found"
-    def EditOrders(self,RegID):
+    def EditOrders(self,Order):
+        import ast
+        Order = ast.literal_eval(Order)
+        print(Order)
         con = sqlite3.connect('database.db')
         cur = con.cursor()
-        cur.execute(f"INSERT INTO Orders VALUES ('{int(OrderID)}','{ID}','{str(New)}','{img}')")
-        con.commit()
+        print("Start")
+        for a in Order:
+            for b in Order[a]:
+                #fastest grab that was possible, faster than fetchone()
+                for Quantity in cur.execute(f"SELECT Quantity FROM {a} WHERE {a}ID='{b}'"): break
+                
+                cur.execute(f"UPDATE {a} SET Quantity = {int(Quantity[0])-int(Order[a][b]['Quantity'])} WHERE {a}ID='{b}'")
+                con.commit()
         con.close()
     def Register(self,name,dob,email,password):#[5] Make Account
         #[6];
@@ -186,9 +198,7 @@ h1, h2, h3, h4, h5, h6, p{ margin: 0;}
 
 </td></tr>
 <tr><td><table id=billtable width="70%" border="0" cellspacing="0" cellpadding="0" align="center" style="border-collapse: collapse;">
-<tr style="border-top: 2px solid #000000; border-bottom: 2px solid #000000;">
 <!--+InsertHeadings+-->
-</tr>
 
 <!--+InsertLine+-->
 <!--+InsertTotal+-->
@@ -202,63 +212,66 @@ h1, h2, h3, h4, h5, h6, p{ margin: 0;}
 </table>
 </body>
 </html>"""
-        def headingInsert():
-            Headings = []
-            print("Start")
-            for a in Order:
-                for b in Order[a]:
-                    for c in Order[a][b]:
-                        print(f"-{a} -{b} -{c}")
-                        Headings.append(f'<td style="padding-top: 5px; padding-bottom: 5px;">{c}</td>')
-                    break
-                break
-            print(Headings)
-            return '\n'.join(Headings)
-        def tableInsert():
-            Table,TotalQ,TotalP = [],0,0
 
-            for a in Order:
-                if a == "User_Name" or a == "User_ID" or a == "Order_ID":
-                    continue
-                for b in Order[a]:
-                    Table.append('<tr style="border-top: 1px solid #999999;">')
-                    for c in Order[a][b]:
-                        Table.append(f'<td style="padding-top: 5px; padding-bottom: 5px;">{Order[a][b][c]}</td>')
-                    Table.append('</tr>')
-                    TotalQ += int(Order[a][b]["Quantity"])
-                    TotalP += float(Order[a][b]["Quantity"])*float(Order[a][b]["Price"])
-            return TotalQ,TotalP, Table
-        def totalInsert(TotalQ, TotalP):
-            return f"""<tr style="border-top: 2px solid #000000; border-bottom: 2px solid #000000;">
-            <td style="padding-top: 5px; padding-bottom: 5px;">Total</td>
-            <td style="padding-top: 5px; padding-bottom: 5px;">£{round(TotalP,2)}</td>
-            <td style="padding-top: 5px; padding-bottom: 5px;">{TotalQ}</td>\n</tr>"""
+        
         now = datetime.now()
         html = html.replace("<!--+todaysdate+-->", now.strftime("%d/%m/%Y %H:%M:%S"))
         html = html.replace("<!--+name+-->", Name)
         
         if Stat == "Order":
+            class OrderFunctions():
+                def headingInsert():
+                    Headings = []
+                    print("Start")
+                    Headings.append('<tr style="border-top: 2px solid #000000; border-bottom: 2px solid #000000;">')
+                    for a in Order:
+                        for b in Order[a]:
+                            for c in Order[a][b]:
+                                print(f"-{a} -{b} -{c}")
+                                Headings.append(f'<td style="padding-top: 5px; padding-bottom: 5px;">{c}</td>')
+                            break
+                        break
+                    Headings.append('</tr>')
+                    print(Headings)
+                    return '\n'.join(Headings)
+                def tableInsert():
+                    Table,TotalQ,TotalP = [],0,0
+
+                    for a in Order:
+                        if a == "User_Name" or a == "User_ID" or a == "Order_ID":
+                            continue
+                        for b in Order[a]:
+                            Table.append('<tr style="border-top: 1px solid #999999;">')
+                            for c in Order[a][b]:
+                                Table.append(f'<td style="padding-top: 5px; padding-bottom: 5px;">{Order[a][b][c]}</td>')
+                            Table.append('</tr>')
+                            TotalQ += int(Order[a][b]["Quantity"])
+                            TotalP += float(Order[a][b]["Quantity"])*float(Order[a][b]["Price"])
+                    return TotalQ,TotalP, Table
+                def totalInsert(TotalQ, TotalP):
+                    return f"""<tr style="border-top: 2px solid #000000; border-bottom: 2px solid #000000;">
+                    <td style="padding-top: 5px; padding-bottom: 5px;">Total</td>
+                    <td style="padding-top: 5px; padding-bottom: 5px;">£{round(TotalP,2)}</td>
+                    <td style="padding-top: 5px; padding-bottom: 5px;">{TotalQ}</td>\n</tr>"""
             html = html.replace("<!--+Windowtitle+-->","Pharmacy Order")
             html = html.replace("<!--+title+-->","Pharmacy receipt:")
             html = html.replace("<!--+ImageQR+-->",'<img src="OrderCode.png" width="400">')
-            TotalQ, TotalP, Table = tableInsert()
-            Headings = headingInsert()
+            TotalQ, TotalP, Table = OrderFunctions.tableInsert()
+            Headings = OrderFunctions.headingInsert()
             html = html.replace('<!--+InsertHeadings+-->', Headings)
             html = html.replace('<!--+InsertLine+-->', '\n'.join(Table))
-            html = html.replace('<!--+InsertTotal+-->', totalInsert(TotalQ, TotalP))
-        elif Stat == "IDK":
-            html = html.replace("<!--+title+-->","Pharmacy Order")
+            html = html.replace('<!--+InsertTotal+-->', OrderFunctions.totalInsert(TotalQ, TotalP))
+            Receipt = "OrderReceipt"
+        elif Stat == "Book":
+            html = html.replace("<!--+title+-->","Pharmacy Bookings")
+            html = html.replace('<!--+InsertHeadings+-->', f'<tr style="border-top: 1px solid #999999;"><td align="center">Your booking is for: {Order[0]} at {Order[1]}</td></tr>')
+            html = html.replace("<!--+ImageQR+-->",'<img src="BookCode.png" width="400">')
+            Receipt = "BookingReceipt"
 
-        
         # dd/mm/YY H:M:S
-        with open(f'{Path}/report.html', 'w') as f:
+        with open(f'{Path}/{Receipt}.html', 'w') as f:
             f.write(html)
         
   
-#Order = {'Tablet': {'1': {'Name': 'Benylin', 'Price': 4.15, 'Quantity': 1}, '2': {'Name': 'Buscopan', 'Price': 3.5, 'Quantity': 2}, '3': {'Name': 'Nytol Herbal', 'Price': 5.99, 'Quantity': 3}, '4': {'Name': 'Dulcolax Adult', 'Price': 2.99, 'Quantity': 4}, '5': 
-#{'Name': 'Gaviscon', 'Price': 8.49, 'Quantity': 5}, '6': {'Name': 'Panadol Paracetamol', 'Price': 2.6, 'Quantity': 6}, '7': {'Name': 'Nurofren', 'Price': 1.89, 'Quantity': 7}, 
-#'8': {'Name': 'Beechams', 'Price': 2.99, 'Quantity': 8}, '9': {'Name': 'Nexium', 'Price': 6.0, 'Quantity': 9}}, 'Liquid': {'1': {'Name': 'Beecharms Cold and Flu', 'Price': 3.99, 'Quantity': 10}, '2': {'Name': 'Nurofren', 'Price': 2.99, 'Quantity': 11}, '3': {'Name': 'Nytol', 'Price': 6.0, 'Quantity': 12}, '4': {'Name': 'Gaviscon Heatburn', 'Price': 11.0, 'Quantity': 13}, '5': {'Name': 'Vovania Chesty', 'Price': 4.2, 'Quantity': 14}, '6': {'Name': 'Dulcosoft Liquid', 'Price': 8.99, 'Quantity': 15}, '7': {'Name': 'Calcough', 'Price': 4.0, 'Quantity': 16}, '8': {'Name': 'Benylin', 'Price': 8.0, 'Quantity': 17}, 
-#'9': {'Name': 'Covania', 'Price': 7.5, 'Quantity': 18}}, 'Capsules': {'1': {'Name': 'Lemsip Max Day3.50', 'Price': 3.5, 'Quantity': 19}, '2': {'Name': 'Buscopan', 'Price': 6.0, 'Quantity': 20}, '3': {'Name': 'Sudafed', 'Price': 4.49, 'Quantity': 21}, '4': {'Name': 'Lemsip Cough Max', 'Price': 4.99, 'Quantity': 22}, '5': {'Name': 'Benylin Cold and Flu', 'Price': 5.0, 'Quantity': 23}, '6': {'Name': 'Galphram', 'Price': 1.29, 'Quantity': 24}, '7': {'Name': 'Colpermin', 'Price': 6.19, 'Quantity': 25}, '8': {'Name': 'Flarin ', 
-#'Price': 5.29, 'Quantity': 26}, '9': {'Name': 'DuloEase', 'Price': 3.5, 'Quantity': 27}}, 'User_ID': '1', 'User_Name': 'Yan'}
-#backProcess.report_html(0,"Order",Order,"C:/Users/robso/Desktop")
-#backProcess.RegisterOrder(0,str(1), {'Tablet': {'4': {'Name': 'Dulcolax Adult', 'Price': 2.99, 'Quantity': 12}, '5': {'Name': 'Gaviscon', 'Price': 8.49, 'Quantity': 8}, '6': {'Name': 'Panadol Paracetamol', 'Price': 2.6, 'Quantity': 3}},"User_Name":"Yan"}, "C:/Users/robso/Desktop")
+#Order = {'Tablet': {'1': {'Name': 'Benylin', 'Price': 4.15, 'Quantity': 12}, '5': {'Name': 'Gaviscon', 'Price': 8.49, 'Quantity': 8}, '9': {'Name': 'Nexium', 'Price': 6.0, 'Quantity':9}}, 'Capsules': {'5': {'Name': 'Benylin Cold and Flu', 'Price': 5.0, 'Quantity': 10}}} 
+#backProcess.report_html(0,"Book",("10:10","12/09/2020"),"C:/Users/robso/Desktop","Yan")
