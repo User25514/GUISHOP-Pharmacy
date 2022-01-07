@@ -1,34 +1,33 @@
 import sqlite3
 from mainValidation import dataValidation
-import pandas as pd
-import numpy as np
 import qrcode
+import ast
+from datetime import datetime
 class backProcess:
     def __init__(self):
         self.REG = dataValidation.Register
-        print("CHEK")
         self.con = sqlite3.connect('database.db')
         self.cur = self.con.cursor()
-        try:
-            self.cur.execute("CREATE TABLE Register (RegID,name,dob,email,password)")
-            self.cur.execute("CREATE TABLE Bookings (BookID,RegIDFK,Date,Time)")
-            self.cur.execute("CREATE TABLE Tablet (TabletID,Name,Price,Quantity)")
-            self.cur.execute("CREATE TABLE Liquid (LiquidID,Name,Price,Quantity)")
-            self.cur.execute("CREATE TABLE Capsules (CapsulesID,Name,Price,Quantity)")
-            self.cur.execute("CREATE TABLE Orders (OrderID,BookingIDFK,Order,OrderQRCode)")
-            self.con.commit()
-        except:
-            pass
+        SQLList = ["CREATE TABLE Register (RegID,name,dob,email,password)",
+            "CREATE TABLE Bookings (BookID,RegIDFK,Date,Time,BookQRCode)",
+            "CREATE TABLE Tablet (TabletID,Name,Price,Quantity)",
+            "CREATE TABLE Liquid (LiquidID,Name,Price,Quantity)",
+            "CREATE TABLE Capsules (CapsulesID,Name,Price,Quantity)",
+            "CREATE TABLE Orders (OrderID,BookingIDFK,Order,OrderQRCode)",
+            "CREATE TABLE Payments (PaymentID,OrderIDFK,Date,Time)"]
+        for i in SQLList:
+            try:
+                self.cur.execute(i)
+                self.con.commit()
+            except:
+                pass
         self.con.close()
-    def BookRecall(self,Date):#[1][2] Books a free date/timeslot
-        print(Date)
+    def BookRecall(self,Date):
         if (Date) == "":
             return False, False
-        #[7]
         con = sqlite3.connect('database.db')
         cur = con.cursor()
         Times = ["08:00","10:00","12:00","14:00","16:00","18:00"]
-        print("Oke")
         for row in cur.execute('SELECT * FROM Bookings'):
             #print(row)
             if row[2] == Date:
@@ -41,22 +40,34 @@ class backProcess:
             return True, Times
     def BookRegister(self,USID,Name,BookTime,BookDate,Path):
         if ((BookTime or BookDate) == ""):
-            return False, False
+            return False, "No Time Or Date selcted"
         con = sqlite3.connect('database.db')
         cur = con.cursor()
         RegID = 0
-
         for row in cur.execute('SELECT * FROM Bookings'):
+            if row[1] == USID and row[2] == BookDate:
+                con.close()
+                return False, "You have a booking already today"
             RegID = row[0]
-        img=qrcode.make(f"Pharmacy Order: {int(RegID)+1},{BookDate},{BookTime}")
-        img.save(f'{Path}/BookCode.png') 
+        img=qrcode.make(f"Pharmacy Book: {int(RegID)+1},{BookDate},{BookTime}")
+        img.save(f'{Path}/BookCode.png')
         cur.execute(f"INSERT INTO Bookings VALUES ('{int(RegID)+1}','{USID}','{BookDate}','{BookTime}','{img}')")
         con.commit()
         con.close()
         backProcess.report_html(0,"Book",(BookTime,BookDate),Path,Name)
         return True,int(RegID)+1
+    def BookRecallData(self,IDs):
+        con = sqlite3.connect('database.db')
+        cur = con.cursor()
+        for row in cur.execute('SELECT * FROM Bookings'):
+            if row[0] == IDs[0] and row[1] == IDs[3]:
+                con.close()
+                return True, "Successful"
+            con.close()
+            return False, "Error with Booking"
+        con.close()
+        return False, "No Booking was found"
     def PaymentRecall(self,IDs):
-        #[9]
         con = sqlite3.connect('database.db')
         cur = con.cursor()
         for row in cur.execute('SELECT * FROM Orders'):
@@ -65,6 +76,19 @@ class backProcess:
                 for Bookingrow in cur.execute('SELECT * FROM Bookings'):
                     print("Booking: ",Bookingrow)
                     if Bookingrow[0] == IDs[1] and Bookingrow[1] == IDs[2]:
+                        PaymentID = ""
+                        for row in cur.execute('SELECT * FROM Payments'):
+                            PaymentID = int(row[0])+1
+                            if row[1] == IDs[0]:
+                                con.close()
+                                return False, "Order already paid"
+                        if PaymentID == "":
+                            PaymentID = 1
+                        now = datetime.now()
+                        date = (now.strftime("%d/%m/%Y"),now.strftime("%H:%M"))
+                        print(f"INSERT INTO Payments VALUES ('{int(PaymentID)}','{IDs[0]}','{date[0]}','{date[1]}')")
+                        cur.execute(f"INSERT INTO Payments VALUES ('{int(PaymentID)}','{IDs[0]}','{date[0]}','{date[1]}')")
+                        con.commit()
                         con.close()
                         Order = row[2]
                         backProcess.EditOrders(0,Order)
@@ -73,8 +97,18 @@ class backProcess:
                 return False, "Error with Booking"
         con.close()
         return False, "No Order was found"
+    def OrderRecall(self,IDs):
+        con = sqlite3.connect('database.db')
+        cur = con.cursor()
+        for row in cur.execute('SELECT * FROM Orders'):
+            if row[0] == IDs[0] and row[1] == IDs[1]:
+                con.close()
+                return True, "Successful", ast.literal_eval(row[2])
+            con.close()
+            return False, "Error with Order",False
+        con.close()
+        return False, "No Order was found",False
     def EditOrders(self,Order):
-        import ast
         Order = ast.literal_eval(Order)
         print(Order)
         con = sqlite3.connect('database.db')
@@ -82,9 +116,7 @@ class backProcess:
         print("Start")
         for a in Order:
             for b in Order[a]:
-                #fastest grab that was possible, faster than fetchone()
                 for Quantity in cur.execute(f"SELECT Quantity FROM {a} WHERE {a}ID='{b}'"): break
-                
                 cur.execute(f"UPDATE {a} SET Quantity = {int(Quantity[0])-int(Order[a][b]['Quantity'])} WHERE {a}ID='{b}'")
                 con.commit()
         con.close()
@@ -134,7 +166,6 @@ class backProcess:
         con.close()
         return False
     def GrabMedication(self,Tables):
-        #[8]
         con = sqlite3.connect('database.db')
         cur = con.cursor()
         Medication = {}
@@ -142,15 +173,12 @@ class backProcess:
             for x in Tables:
                 Medication[x] = {}
                 for row in cur.execute(f'SELECT * FROM {x}'):
-                    #print(row)
                     Medication[x][row[0]] = {'Name':row[1],'Price':row[2],'Quantity':row[3],"QRCode":qrcode.make((x,row[0],row[1]))}
         except:
             con.close()
             return False, []
         con.close()
         return True, Medication
-
-
     def RegisterOrder(self,ID,Name,Order,Path):
         print(f"Register: {ID}, {Order}, {Path}")
         if (ID or Order) == "":
@@ -158,23 +186,29 @@ class backProcess:
         con = sqlite3.connect('database.db')
         cur = con.cursor()
         OrderID = ""
+        Change = False
         for row in cur.execute('SELECT * FROM Orders'):
-            print(row)
+            if row[1] == ID:
+                Change = True
+                OrderID = int(row[0])
+                break
             OrderID = int(row[0])+1
         if OrderID == "":
             OrderID = 1
-        #Order["Order_ID"] = int(OrderID)+1
         img=qrcode.make(f"Pharmacy Order: {int(OrderID)},{int(ID)}")
         img.save(f'{Path}/OrderCode.png') 
-        New = str(Order).replace("'",'"')        
-        cur.execute(f"INSERT INTO Orders VALUES ('{int(OrderID)}','{ID}','{str(New)}','{img}')")
+        New = str(Order).replace("'",'"')   
+        if Change == False:     
+            cur.execute(f"INSERT INTO Orders VALUES ('{int(OrderID)}','{ID}','{str(New)}','{img}')")
+        else:
+            print(f"------------UPDATE Orders SET Order = '{str(New)}' WHERE OrderID='{OrderID}'")
+            cur.execute(f"UPDATE Orders SET 'Order'='{New}' WHERE OrderID='{OrderID}'")            
         con.commit()
         con.close()
-        
         backProcess.report_html(0,"Order",Order,Path,Name)
         return True
     def report_html(self,Stat,Order,Path,Name):
-        from datetime import datetime
+        
         
         html = """<html><head>
 <title><!--+Windowtitle+--></title>
@@ -215,7 +249,7 @@ h1, h2, h3, h4, h5, h6, p{ margin: 0;}
 
         
         now = datetime.now()
-        html = html.replace("<!--+todaysdate+-->", now.strftime("%d/%m/%Y %H:%M:%S"))
+        html = html.replace("<!--+todaysdate+-->", now.strftime("%d/%m/%Y %H:%M"))
         html = html.replace("<!--+name+-->", Name)
         
         if Stat == "Order":
@@ -263,6 +297,7 @@ h1, h2, h3, h4, h5, h6, p{ margin: 0;}
             html = html.replace('<!--+InsertTotal+-->', OrderFunctions.totalInsert(TotalQ, TotalP))
             Receipt = "OrderReceipt"
         elif Stat == "Book":
+            html = html.replace("<!--+Windowtitle+-->","Pharmacy Booking")
             html = html.replace("<!--+title+-->","Pharmacy Bookings")
             html = html.replace('<!--+InsertHeadings+-->', f'<tr style="border-top: 1px solid #999999;"><td align="center">Your booking is for: {Order[0]} at {Order[1]}</td></tr>')
             html = html.replace("<!--+ImageQR+-->",'<img src="BookCode.png" width="400">')

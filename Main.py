@@ -8,7 +8,6 @@ from PyQt5.QtGui import *
 import qrcode
 import cv2
 import mainBack
-import ast
 
 backProcess = mainBack.backProcess()
 data = {
@@ -32,7 +31,7 @@ data = {
         "Time":"",
         "Rough_Time":[],
         "Rough_Timings":[],
-        "Recipt Path":"[]",
+        "Reciept Path":"[]",
     },
     "Shop":{
         "Status":False,
@@ -40,11 +39,12 @@ data = {
         "Section":"",
         "Name":"",
         "Date":"",
-        "Recipt Path":"[]",
+        "Reciept Path":"[]",
+        "Order":{}
     },
     "Payment":{
         "Status":False,
-        "Recipt Path":"[]",
+        "Reciept Path":"[]",
     }
 }
 class frontProcess:
@@ -52,7 +52,7 @@ class frontProcess:
         def __init__(self):
             super().__init__()
             self.setWindowTitle('Calendar')
-            self.setGeometry(300, 300, 385, 280)
+            self.setGeometry(300, 300, 385, 360)
 
             self.initUI()
         def initUI(self):
@@ -91,9 +91,8 @@ class frontProcess:
             super().__init__()
             self.openFileNameDialog()
         def openFileNameDialog(self):
-            data[data["Direction"]]["Recipt Path"] = QFileDialog.getExistingDirectory(self,"Select Where you would like the Reciept to save")
+            data[data["Direction"]]["Reciept Path"] = QFileDialog.getExistingDirectory(self,"Select The location to save or read your reciept")
 
-    
     def Book(layout,window):#[1] Confirmatin to the user that the slot was booked successfully.
         data["Direction"] = "Book"
         try:
@@ -101,8 +100,8 @@ class frontProcess:
                 layout.itemAt(x).widget().deleteLater()
         except:
             pass
-        window.setGeometry(100, 100, 380, 300)
-        window.setFixedSize(380, 300)
+        window.setGeometry(100, 100, 380, 400)
+        window.setFixedSize(396, 448)
         bookLabel1 = QLabel("Date: ")
         bookCal = frontProcess.calendarPopup()
         def bookCalendar():
@@ -147,15 +146,18 @@ class frontProcess:
             if LabelThing.isChecked():
                 data["Book"]["Time"] = LabelThing.Time
         def RegisterToDatabase(Direction):
+            data["Direction"] = "Book"
             frontProcess.DirectoryPopup()
-            if data["Book"]["Recipt Path"] != "[]":
+            if data["Book"]["Reciept Path"] != "[]":
                 print("imagine")
                 if (data["Book"]["Time"] and data["Book"]["Date"]) != "":
-                    choice,data["Booking ID"] = backProcess.BookRegister(data["User ID"],data["User Name"],data["Book"]["Time"],data["Book"]["Date"],data["Book"]["Recipt Path"])
+                    choice,Status = backProcess.BookRegister(data["User ID"],data["User Name"],data["Book"]["Time"],data["Book"]["Date"],data["Book"]["Reciept Path"])
                 else:
                     choice = False
+                    Status = "Failed to Book"
                 alert = QMessageBox()
                 if choice == True:
+                    data["Booking ID"] = Status
                     alert.setText("Booked Successfully") 
                     alert.exec()
                     if Direction == True:
@@ -165,27 +167,72 @@ class frontProcess:
                     pass
                     #Book.show()
                 else:
-                    alert.setText("Error, no date or time selected is free")
+                    alert.setText(Status)
                     alert.exec()
+        def ReadQR(Name):
+            print(Name)
+            print(f"{data[data['Direction']]['Reciept Path']}/{Name}Code.png")
+            img=cv2.imread(f"{data[data['Direction']]['Reciept Path']}/{Name}Code.png")
+            det=cv2.QRCodeDetector()
+            val, pts, st_code=det.detectAndDecode(img)
+            val = ((val.split(" "))[2]).split(",")
+            val.append(data["User ID"])
+            return val
         def ExistingFile(Stat):
-            
+            data["Direction"] = "Book"
             frontProcess.DirectoryPopup()
-            print(data["Book"]["Recipt Path"])
-            if data["Book"]["Recipt Path"] != "[]":
+            if data["Book"]["Reciept Path"] != "[]":
                 if Stat == True: # Existing File
+                    val = ReadQR("Order")
+                    statRec, message, data["Shop"]["Order"]= backProcess.OrderRecall(val)
+                    #print(data["Shop"]["Order"])
+                    alert = QMessageBox()
+                    if statRec == True:
+                        data["Booking ID"] = val[1]
+                        alert.setText("Order found!") 
+                        alert.exec()
+                        frontProcess.Shop(layout,window)
+                    else:
+                        alert.setText(message)
+                        alert.exec()
                     pass
                 elif Stat == False: # Existing Booking
-                    pass
+                    print("Book")
+                    val = ReadQR("Book")
+                    print(val)
+                    statRec, message = backProcess.BookRecallData(val)
+                    alert = QMessageBox()
+                    if statRec == True:
+                        data["Booking ID"] = val[0]
+                        alert.setText("Booking found!") 
+                        alert.exec()
+                        frontProcess.Shop(layout,window)
+                    else:
+                        alert.setText(message)
+                        alert.exec()
                 else:
                     pass
-        def BookingReceipt():
-            #choice = backProcess.RegisterOrder(data["User ID"],medication["Orders"],data["Shop"]["Recipt Path"])
-            pass
+        def Payment():# Scan QR code on receipt.
+            data["Direction"] = "Payment"
+            frontProcess.DirectoryPopup()
+            
+            val = ReadQR("Order")
+            status,message = backProcess.PaymentRecall(val)
+            alert = QMessageBox()
+            if status == True:
+                alert.setText(message) 
+                alert.exec()
+                pass
+            else:
+                alert.setText(message)
+                alert.exec()
+            print("Start")
+            
         bookButton1 = QPushButton("Pay Online")
-        bookButton1.clicked.connect(frontProcess.Payment)
+        bookButton1.clicked.connect(Payment)
         bookButton2 = QPushButton("Order Online")
         bookButton2.clicked.connect(lambda: RegisterToDatabase(True))
-       
+
         bookButton3 = QPushButton("Edit Current Order")
         bookButton3.clicked.connect(lambda: ExistingFile(True))
         bookButton4 = QPushButton("Order Inperson")
@@ -196,7 +243,6 @@ class frontProcess:
         layout.addWidget(bookButton2,1,0)
         layout.addWidget(bookButton3,1,1)
         layout.addWidget(bookButton4,2,0)
-        print("imagine")
         layout.addWidget(bookButton5,2,1)
         layout.addWidget(bookLabel1,4,0)
         layout.addWidget(bookCalLoginbutton,5,0)
@@ -205,7 +251,6 @@ class frontProcess:
         
         
     def Shop(layout,window):#[3][4][5] Browse medicines of the cargories provided.
-        # Each product will be associated with a particular price and QR code.
         data["Direction"] = "Shop"
         try:
             for x in range(0,100):
@@ -237,7 +282,11 @@ class frontProcess:
                     try:
                          medication[data["Shop"]["Section"]][a]["Text"] = QLineEdit(str(medication["Orders"][data["Shop"]["Section"]][a]["Quantity"]))
                     except:
-                        medication[data["Shop"]["Section"]][a]["Text"] = QLineEdit()
+                        try:
+                            
+                            medication[data["Shop"]["Section"]][a]["Text"] = QLineEdit(str(data["Shop"]["Order"][data["Shop"]["Section"]][a]["Quantity"]))
+                        except:
+                            medication[data["Shop"]["Section"]][a]["Text"] = QLineEdit()
                     layout.addWidget(medication[data["Shop"]["Section"]][a]["Text"],x+1,y)
                     medication[data["Shop"]["Section"]][a]["Error"] = QLabel()
                     layout.addWidget(medication[data["Shop"]["Section"]][a]["Error"],x+2,y)
@@ -286,24 +335,27 @@ class frontProcess:
                         pass
                     CallMed()
         def confirm():
-            CrossWindow()
-            if medication["Status"] != False:
-                if len(medication["Orders"]) > 0 and data["Shop"]["Recipt Path"] != "[]":
-                    #medication["Orders"]["User_Name"] = data["User Name"]
-                    #choice = backProcess.report_html(medication["Orders"])
-                    choice = backProcess.RegisterOrder(data["Booking ID"],data["User Name"],medication["Orders"],data["Shop"]["Recipt Path"])
-                else:
-                    choice = False
-                
-                alert = QMessageBox()
-                if choice == True:
-                    alert.setText("Recipt made Successfully") 
-                    alert.exec()
-                    pass
-                    #Book.show()
-                else:
-                    alert.setText("Error, no date or time selected is free")
-                    alert.exec()
+            data["Direction"] = "Shop"
+            frontProcess.DirectoryPopup()
+            if data["Shop"]["Reciept Path"] != "[]":
+                CrossWindow()
+                if medication["Status"] != False:
+                    if len(medication["Orders"]) > 0 and data["Shop"]["Reciept Path"] != "[]":
+                        #medication["Orders"]["User_Name"] = data["User Name"]
+                        #choice = backProcess.report_html(medication["Orders"])
+                        choice = backProcess.RegisterOrder(data["Booking ID"],data["User Name"],medication["Orders"],data["Shop"]["Reciept Path"])
+                    else:
+                        choice = False
+                    
+                    alert = QMessageBox()
+                    if choice == True:
+                        alert.setText("Reciept made Successfully") 
+                        alert.exec()
+                        pass
+                        #Book.show()
+                    else:
+                        alert.setText("Error, no date or time selected is free")
+                        alert.exec()
         counter = 0
         for a in data["Shop"]["Categories"]:
             LabelThing = QRadioButton("Slot " + str(counter) + ": " + str(a))
@@ -315,51 +367,16 @@ class frontProcess:
         ConfirmButton.clicked.connect(confirm)
 
         layout.addWidget(ConfirmButton,(x*4)*ID+3,0)
-        def GrabDirectory():
-            DirectoryTimer.start()
-            frontProcess.DirectoryPopup()
-        DirectoryButton = QPushButton("Directory")
-        DirectoryButton.clicked.connect(GrabDirectory)
+       
         def GoBack():
             frontProcess.Book(layout,window)
         BackButton = QPushButton("Go Back")
         BackButton.clicked.connect(GoBack)
         layout.addWidget(BackButton,(x*4)*ID+3,2)
-        layout.addWidget(DirectoryButton,(x*4)*ID+3,1)
-        DirectoryDirection = QLabel("[]")
-        layout.addWidget(DirectoryDirection,(x*4)*ID+4,0,1,3)
-        def ChangeDirectoryName():
-            if DirectoryDirection.text() != data["Shop"]["Recipt Path"]:
-                DirectoryDirection.setText(data["Shop"]["Recipt Path"])
-        DirectoryTimer = QTimer()
-        DirectoryTimer.setInterval(1000)
-        DirectoryTimer.timeout.connect(ChangeDirectoryName)
-        
-    def Payment():# Scan QR code on receipt.
-        data["Direction"] = "Payment"
-        frontProcess.DirectoryPopup()
-        print(f"{data[data['Direction']]['Recipt Path']}/OrderCode.png")
-        def ReadQR():
-            img=cv2.imread(f"{data[data['Direction']]['Recipt Path']}/OrderCode.png")
-            det=cv2.QRCodeDetector()
-            val, pts, st_code=det.detectAndDecode(img)
-            print(val)
-            val = (val.replace("Pharmacy Order: ","")).split(",")
-            val.append(data["User ID"])
-            print(val)
-            status,message = backProcess.PaymentRecall(val)
-            alert = QMessageBox()
-            if status == True:
-                alert.setText(message) 
-                alert.exec()
-                pass
-            else:
-                alert.setText(message)
-                alert.exec()
-        print("Start")
-        ReadQR()
 
-        pass
+        
+    
+
 def main(): # Login Register
     data["Direction"] = "Register"
     app = QApplication(sys.argv)
@@ -473,9 +490,9 @@ def main(): # Login Register
     #
     window.setLayout(layout)
     window.show()
-    data["Direction"] = "Book"
+    #data["Direction"] = "Book"
     #frontProcess.Shop(layout,window)
-    frontProcess.Book(layout,window)
+    #frontProcess.Book(layout,window)
     app.exec(app.exec_())
 if __name__ == "__main__":
     main()
