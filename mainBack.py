@@ -23,19 +23,28 @@ class backProcess:
                 pass
         self.con.close()
     def BookRecall(self,Date):
-        if (Date) == "":
+        now = datetime.now()
+        if Date == "":
             return False, False
+        elif int((Date.split("/"))[2]) < int(now.strftime("%Y")):
+            return False, False
+        elif int((Date.split("/"))[2]) == int(now.strftime("%Y")):
+            if int((Date.split("/"))[1]) < int(now.strftime("%m")):
+                return False, False
+            elif int((Date.split("/"))[1]) == int(now.strftime("%m")):
+                if int((Date.split("/"))[0]) < int(now.strftime("%d")):
+                    return False, False
+                else:
+                    pass
         con = sqlite3.connect('database.db')
         cur = con.cursor()
         Times = ["08:00","10:00","12:00","14:00","16:00","18:00"]
         for row in cur.execute('SELECT * FROM Bookings'):
-            #print(row)
             if row[2] == Date:
                 Times.remove(row[3])
         con.close()
-        print("Returning")
         if len(Times) == 0:
-            return False, False
+            return False, Times
         else:
             return True, Times
     def BookRegister(self,USID,Name,BookTime,BookDate,Path):
@@ -63,18 +72,17 @@ class backProcess:
             if row[0] == IDs[0] and row[1] == IDs[3]:
                 con.close()
                 return True, "Successful"
-            con.close()
-            return False, "Error with Booking"
+            elif row[0] == IDs[0] and row[1] != IDs[3]:
+                con.close()
+                return False, "Error with Booking"
         con.close()
         return False, "No Booking was found"
     def PaymentRecall(self,IDs):
         con = sqlite3.connect('database.db')
         cur = con.cursor()
         for row in cur.execute('SELECT * FROM Orders'):
-            print("Orders: ",row)
             if row[0] == IDs[0] and row[1] == IDs[1]:
                 for Bookingrow in cur.execute('SELECT * FROM Bookings'):
-                    print("Booking: ",Bookingrow)
                     if Bookingrow[0] == IDs[1] and Bookingrow[1] == IDs[2]:
                         PaymentID = ""
                         for row in cur.execute('SELECT * FROM Payments'):
@@ -86,7 +94,6 @@ class backProcess:
                             PaymentID = 1
                         now = datetime.now()
                         date = (now.strftime("%d/%m/%Y"),now.strftime("%H:%M"))
-                        print(f"INSERT INTO Payments VALUES ('{int(PaymentID)}','{IDs[0]}','{date[0]}','{date[1]}')")
                         cur.execute(f"INSERT INTO Payments VALUES ('{int(PaymentID)}','{IDs[0]}','{date[0]}','{date[1]}')")
                         con.commit()
                         con.close()
@@ -104,16 +111,15 @@ class backProcess:
             if row[0] == IDs[0] and row[1] == IDs[1]:
                 con.close()
                 return True, "Successful", ast.literal_eval(row[2])
-            con.close()
-            return False, "Error with Order",False
+            elif row[0] == IDs[0] and row[1] != IDs[1]:
+                con.close()
+                return False, "Error with Order",False
         con.close()
         return False, "No Order was found",False
     def EditOrders(self,Order):
         Order = ast.literal_eval(Order)
-        print(Order)
         con = sqlite3.connect('database.db')
         cur = con.cursor()
-        print("Start")
         for a in Order:
             for b in Order[a]:
                 for Quantity in cur.execute(f"SELECT Quantity FROM {a} WHERE {a}ID='{b}'"): break
@@ -123,23 +129,18 @@ class backProcess:
     def Register(self,name,dob,email,password):#[5] Make Account
         #[6];
         if (name or dob or email or password) == "":
-            return False
-        print(f"{name}, {dob}, {email}, {password}")
+            return False,"Input Empty"
         REG = dataValidation.Register
         con = sqlite3.connect('database.db')
         cur = con.cursor()
-        a = REG.nameVal(name)
-        b = REG.dobVal(dob)
-        c = REG.emailVal(email)
-        d = REG.passwordVal(password)
         RegID = 0
-        if a == False:
+        if REG.nameVal(name) == False:
             return False, "Invalid Name"
-        elif b == False:
+        elif REG.dobVal(dob) == False:
             return False, "Invalid Date of Birth"
-        elif c == False:
+        elif REG.emailVal(email) == False:
             return False , "Invalid Email"
-        elif d == False:
+        elif REG.passwordVal(password) == False:
             return False, "Invalid Password"
         else:
             pass
@@ -151,8 +152,7 @@ class backProcess:
                 return False, "Email already in use"
         cur.execute(f"INSERT INTO Register VALUES ('{int(RegID)+1}','{name}','{dob}','{email}','{password}')")
         con.commit()
-        #for row in cur.execute('SELECT * FROM Register ORDER BY RegID'):
-            #print(row)
+
 
         con.close()
         return True, int(RegID)+1
@@ -163,7 +163,6 @@ class backProcess:
         con = sqlite3.connect('database.db')
         cur = con.cursor()
         for row in cur.execute('SELECT * FROM Register ORDER BY name'):
-            #print(row)
             if row[4] == password and row[2] == dob:
                 con.close()
                 return True, row[0],row[1]
@@ -184,7 +183,6 @@ class backProcess:
         con.close()
         return True, Medication
     def RegisterOrder(self,ID,Name,Order,Path):
-        print(f"Register: {ID}, {Order}, {Path}")
         if (ID or Order) == "":
             return False
         con = sqlite3.connect('database.db')
@@ -205,7 +203,6 @@ class backProcess:
         if Change == False:     
             cur.execute(f"INSERT INTO Orders VALUES ('{int(OrderID)}','{ID}','{str(New)}','{img}')")
         else:
-            print(f"------------UPDATE Orders SET Order = '{str(New)}' WHERE OrderID='{OrderID}'")
             cur.execute(f"UPDATE Orders SET 'Order'='{New}' WHERE OrderID='{OrderID}'")            
         con.commit()
         con.close()
@@ -260,17 +257,14 @@ h1, h2, h3, h4, h5, h6, p{ margin: 0;}
             class OrderFunctions():
                 def headingInsert():
                     Headings = []
-                    print("Start")
                     Headings.append('<tr style="border-top: 2px solid #000000; border-bottom: 2px solid #000000;">')
                     for a in Order:
                         for b in Order[a]:
                             for c in Order[a][b]:
-                                print(f"-{a} -{b} -{c}")
                                 Headings.append(f'<td style="padding-top: 5px; padding-bottom: 5px;">{c}</td>')
                             break
                         break
                     Headings.append('</tr>')
-                    print(Headings)
                     return '\n'.join(Headings)
                 def tableInsert():
                     Table,TotalQ,TotalP = [],0,0
@@ -312,5 +306,3 @@ h1, h2, h3, h4, h5, h6, p{ margin: 0;}
             f.write(html)
         
   
-#Order = {'Tablet': {'1': {'Name': 'Benylin', 'Price': 4.15, 'Quantity': 12}, '5': {'Name': 'Gaviscon', 'Price': 8.49, 'Quantity': 8}, '9': {'Name': 'Nexium', 'Price': 6.0, 'Quantity':9}}, 'Capsules': {'5': {'Name': 'Benylin Cold and Flu', 'Price': 5.0, 'Quantity': 10}}} 
-#backProcess.report_html(0,"Book",("10:10","12/09/2020"),"C:/Users/robso/Desktop","Yan")

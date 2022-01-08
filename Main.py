@@ -2,6 +2,8 @@ import time
 import sys
 from datetime import datetime
 import calendar
+from types import prepare_class
+from typing import ParamSpecKwargs
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -10,43 +12,7 @@ import cv2
 import mainBack
 import pytest
 backProcess = mainBack.backProcess()
-data = {
-    "User ID":"1",
-    "User Name":"Yan",
-    "Booking ID":"",
-    "Direction":"",
-    "Register":{
-        "Status":False,
-        "Name":"",
-        "Date":"",
-        "Password":""
-    },
-    "Login":{
-        "Status":False,
-        "Date":""
-    },
-    "Book":{
-        "Status":False,
-        "Date":"",
-        "Time":"",
-        "Rough_Time":[],
-        "Rough_Timings":[],
-        "Reciept Path":"[]",
-    },
-    "Shop":{
-        "Status":False,
-        "Categories":("Tablet","Liquid","Capsules"),
-        "Section":"",
-        "Name":"",
-        "Date":"",
-        "Reciept Path":"[]",
-        "Order":{}
-    },
-    "Payment":{
-        "Status":False,
-        "Reciept Path":"[]",
-    }
-}
+
 class frontProcess:
     class calendarPopup(QWidget):
         def __init__(self):
@@ -117,15 +83,15 @@ class frontProcess:
                     bookCalLoginbutton.setText(data["Book"]["Date"])
 
                     Status, data["Book"]["Rough_Time"] = backProcess.BookRecall(data["Book"]["Date"])
+                    offset = 8
+                    for x in range(0,len(data["Book"]["Rough_Timings"])):
+                        try:
+                            print(x+offset," ",layout.itemAt(x+offset).widget().text())
+                            layout.itemAt(x+offset).widget().deleteLater()
+                        except:
+                            pass
                     if Status == True:
-                        offset = 8
-                        for x in range(0,len(data["Book"]["Rough_Timings"])):
-
-                            try:
-                                print(x+offset," ",layout.itemAt(x+offset).widget().text())
-                                layout.itemAt(x+offset).widget().deleteLater()
-                            except:
-                                pass
+                        
                         data["Book"]["Rough_Timings"] = data["Book"]["Rough_Time"]
                         for x in range(0,len(data["Book"]["Rough_Time"])-1):
 
@@ -133,6 +99,9 @@ class frontProcess:
                             LabelThing.Time = data["Book"]["Rough_Time"][x]
                             LabelThing.clicked.connect(TimeChoice)
                             layout.addWidget(LabelThing,x+offset,0)     
+                    elif Status == False:
+                        pass
+
             except:
                 pass
         qTimer = QTimer()
@@ -499,19 +468,167 @@ def main(): # Login Register
     #frontProcess.Shop(layout,window)
     #frontProcess.Book(layout,window)
     app.exec(app.exec_())
+class runeverything(object):
+    def call_everything(self):
+        for name in dir(self):
+            obj = getattr(self, name)
+            if callable(obj) and name != 'call_everything' and name[:2] != '__':
+                obj()
+
 class Testing():
-    def TrueDataVal():
-        #pytest
-        assert backProcess.Login("1/7/2004","TestPass12") == (True,"1","Mox")
-    @pytest.mark.xfail
-    def FalseDataVal():
-        #pytest
-        assert backProcess.Login("1/7/2004","TestPass") == (False,"No account found","")
+    def __init__(self):
+        self.Curl()
+    class BackEndTest(runeverything):
+        class BookRecallTest(runeverything):
+            def TrueDataVal(self):
+                now = datetime.now()
+                assert backProcess.BookRecall(now.strftime("%d/%m/%Y"))[0] == True
+            @pytest.mark.xfail
+            def FalseDataVal(self):
+                assert backProcess.BookRecall("") == (False,False)
+                assert backProcess.BookRecall("19/8/2000") == (False,False)
+                assert NewDat["BookingTest"]["Time"] not in backProcess.BookRecall(NewDat["BookingTest"]["Date"])[1]  
+        class BookRecallDataTest(runeverything):
+            def TrueDataVal(self):
+                assert backProcess.BookRecallData((NewDat["BookingTest"]["Booking ID"],"","",NewDat["BookingTest"]["User ID"]))[0] == True
+            @pytest.mark.xfail
+            def FalseDataVal(self):
+                assert backProcess.BookRecallData((NewDat["BookingTest"]["Booking ID"],"","","0")) == (False,"Error with Booking")
+                assert backProcess.BookRecallData(("0","","","0")) == (False,"No Booking was found")
+        class OrderRecallTest(runeverything):
+            def TrueDataVal(self):
+                assert backProcess.OrderRecall((NewDat["OrderTest"]["Order ID"],NewDat["OrderTest"]["Booking ID"]))[0] == True
+            @pytest.mark.xfail
+            def FalseDataVal(self):
+                assert backProcess.OrderRecall((NewDat["OrderTest"]["Order ID"],"0")) == (False,"Error with Order",False)
+                assert backProcess.OrderRecall(("0","0")) == (False,"No Order was found",False)
+        class RegisterTest(runeverything):
+            @pytest.mark.xfail
+            def FalseDataVal(self):
+                assert backProcess.Register("","","","") == (False,"Input Empty")
+                assert backProcess.Register(NewDat["RegisterTest"]["Name"],NewDat["RegisterTest"]["DOB"],NewDat["RegisterTest"]["Email"],"TestPass") == (False,"Invalid Password")
+                assert backProcess.Register(NewDat["RegisterTest"]["Name"],NewDat["RegisterTest"]["DOB"],NewDat["RegisterTest"]["Email"],NewDat["RegisterTest"]["Password"]) == (False,"Email already in use")
+                assert backProcess.Register("David12",NewDat["RegisterTest"]["DOB"],NewDat["RegisterTest"]["Email"],NewDat["RegisterTest"]["Password"]) == (False,"Invalid Name")
+        class LoginTest(runeverything):
+            def TrueDataVal(self):
+                assert backProcess.Login(NewDat["RegisterTest"]["DOB"],NewDat["RegisterTest"]["Password"])[0] == True
+            @pytest.mark.xfail
+            def FalseDataVal(self):
+                assert backProcess.Login("1/7/1998","TestPass") == (False,"No account found","")
+        class GrabMedicationTest(runeverything):
+            def TrueDataVal(self):
+                assert backProcess.GrabMedication(["Tablet"])[0] == True
+            @pytest.mark.xfail
+            def FalseDataVal(self):
+                assert backProcess.GrabMedication(["Something Non Existent"]) == (False,[])
         
+        
+        def Curl(self):
+            
+            BookRecall = self.BookRecallTest()
+            BookRecall.call_everything()
+            print("BookRecall Test: Pass")
+            BookRecallData = self.BookRecallDataTest()
+            BookRecallData.call_everything()
+            print("BookRecalData Test: Pass")
+            OrderRecall = self.OrderRecallTest()
+            OrderRecall.call_everything()
+            print("OrderRecall Test: Pass")
+            Register = self.RegisterTest()
+            Register.call_everything()
+            print("Register Test: Pass")
+            Login = self.LoginTest()
+            Login.call_everything()
+            print("Login Test: Pass")
+            GrabMedication = self.GrabMedicationTest()
+            GrabMedication.call_everything()
+            print("GrabMedication Test: Pass")
+            pass
+    def Curl(self):
+        BET = self.BackEndTest()
+        BET.call_everything()
+        pass
 
 
 
 
 if __name__ == "__main__":
-    Testing.FalseDataVal()
+    run = "Test"
+    if run == "main":
+        data = {
+            "User ID":"1",
+            "User Name":"Yan",
+            "Booking ID":"",
+            "Direction":"",
+            "Register":{
+                "Status":False,
+                "Name":"",
+                "Date":"",
+                "Password":""
+            },
+            "Login":{
+                "Status":False,
+                "Date":""
+            },
+            "Book":{
+                "Status":False,
+                "Date":"",
+                "Time":"",
+                "Rough_Time":[],
+                "Rough_Timings":[],
+                "Reciept Path":"[]",
+            },
+            "Shop":{
+                "Status":False,
+                "Categories":("Tablet","Liquid","Capsules"),
+                "Section":"",
+                "Name":"",
+                "Date":"",
+                "Reciept Path":"[]",
+                "Order":{}
+            },
+            "Payment":{
+                "Status":False,
+                "Reciept Path":"[]",
+            }
+        }
+        main()
+    elif run == "Test":
+        import sqlite3
+        con = sqlite3.connect('database.db')
+        cur = con.cursor()
+        NewDat ={
+            "BookingTest":{
+                "User ID":"",
+                "Booking ID":"",
+                "Date":"",
+                "Time":"",
+            },
+            "RegisterTest":{
+                "User ID":"",
+                "Name":"",
+                "DOB":"",
+                "Email":"",
+                "Password":"",
+            },
+            "OrderTest":{
+                "Order ID":"",
+                "Booking ID":"",}
+        }
+        for row in cur.execute('SELECT * FROM Bookings'): break
+        NewDat["BookingTest"]["Booking ID"] = row[0]
+        NewDat["BookingTest"]["User ID"] = row[1]
+        NewDat["BookingTest"]["Date"] = row[2]
+        NewDat["BookingTest"]["Time"] = row[3]
+        for row in cur.execute('SELECT * FROM Register'): break
+        NewDat["RegisterTest"]["User ID"] = row[0]
+        NewDat["RegisterTest"]["Name"] = row[1]
+        NewDat["RegisterTest"]["DOB"] = row[2]
+        NewDat["RegisterTest"]["Email"] = row[3]
+        NewDat["RegisterTest"]["Password"] = row[4]
+        for row in cur.execute('SELECT * FROM Orders'): break
+        NewDat["OrderTest"]["Order ID"] = row[0]
+        NewDat["OrderTest"]["Booking ID"] = row[1]
+        con.close()
+        Test = Testing()
     pass
