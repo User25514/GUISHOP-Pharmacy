@@ -19,37 +19,27 @@ class backProcess:
             try:
                 self.cur.execute(i)
                 self.con.commit()
-            except:
-                pass
+            except: pass
         self.con.close()
     def BookRecall(self,Date):
         now = datetime.now()
-        if Date == "":
-            return False, False
-        elif int((Date.split("/"))[2]) < int(now.strftime("%Y")):
-            return False, False
+        if Date == "": return False, False
+        elif int((Date.split("/"))[2]) < int(now.strftime("%Y")): return False, False
         elif int((Date.split("/"))[2]) == int(now.strftime("%Y")):
-            if int((Date.split("/"))[1]) < int(now.strftime("%m")):
-                return False, False
+            if int((Date.split("/"))[1]) < int(now.strftime("%m")): return False, False
             elif int((Date.split("/"))[1]) == int(now.strftime("%m")):
-                if int((Date.split("/"))[0]) < int(now.strftime("%d")):
-                    return False, False
-                else:
-                    pass
+                if int((Date.split("/"))[0]) < int(now.strftime("%d")): return False, False
+                else: pass
         con = sqlite3.connect('database.db')
         cur = con.cursor()
         Times = ["08:00","10:00","12:00","14:00","16:00","18:00"]
         for row in cur.execute('SELECT * FROM Bookings'):
-            if row[2] == Date:
-                Times.remove(row[3])
+            if row[2] == Date: Times.remove(row[3])
         con.close()
-        if len(Times) == 0:
-            return False, Times
-        else:
-            return True, Times
+        if len(Times) == 0: return False, Times
+        else: return True, Times
     def BookRegister(self,USID,Name,BookTime,BookDate,Path):
-        if ((BookTime or BookDate) == ""):
-            return False, "No Time Or Date selcted"
+        if ((BookTime or BookDate) == ""): return False, "No Time Or Date selcted"
         con = sqlite3.connect('database.db')
         cur = con.cursor()
         RegID = 0
@@ -78,10 +68,12 @@ class backProcess:
         con.close()
         return False, "No Booking was found"
     def PaymentRecall(self,IDs):
+        print(IDs)
         con = sqlite3.connect('database.db')
         cur = con.cursor()
         for row in cur.execute('SELECT * FROM Orders'):
             if row[0] == IDs[0] and row[1] == IDs[1]:
+                Order = row[2]
                 for Bookingrow in cur.execute('SELECT * FROM Bookings'):
                     if Bookingrow[0] == IDs[1] and Bookingrow[1] == IDs[2]:
                         PaymentID = ""
@@ -90,14 +82,12 @@ class backProcess:
                             if row[1] == IDs[0]:
                                 con.close()
                                 return False, "Order already paid"
-                        if PaymentID == "":
-                            PaymentID = 1
+                        if PaymentID == "": PaymentID = 1
                         now = datetime.now()
                         date = (now.strftime("%d/%m/%Y"),now.strftime("%H:%M"))
                         cur.execute(f"INSERT INTO Payments VALUES ('{int(PaymentID)}','{IDs[0]}','{date[0]}','{date[1]}')")
                         con.commit()
                         con.close()
-                        Order = row[2]
                         backProcess.EditOrders(0,Order)
                         return True, "Successful"
                 con.close()
@@ -126,24 +116,17 @@ class backProcess:
                 cur.execute(f"UPDATE {a} SET Quantity = {int(Quantity[0])-int(Order[a][b]['Quantity'])} WHERE {a}ID='{b}'")
                 con.commit()
         con.close()
-    def Register(self,name,dob,email,password):#[5] Make Account
-        #[6];
-        if (name or dob or email or password) == "":
-            return False,"Input Empty"
+    def Register(self,name,dob,email,password):#[5] Make Account #[6];
+        if (name or dob or email or password) == "": return False,"Input Empty"
         REG = dataValidation.Register
         con = sqlite3.connect('database.db')
         cur = con.cursor()
         RegID = 0
-        if REG.nameVal(name) == False:
-            return False, "Invalid Name"
-        elif REG.dobVal(dob) == False:
-            return False, "Invalid Date of Birth"
-        elif REG.emailVal(email) == False:
-            return False , "Invalid Email"
-        elif REG.passwordVal(password) == False:
-            return False, "Invalid Password"
-        else:
-            pass
+        if REG.nameVal(name) == False: return False, "Invalid Name"
+        elif REG.dobVal(dob) == False: return False, "Invalid Date of Birth"
+        elif REG.emailVal(email) == False: return False , "Invalid Email"
+        elif REG.passwordVal(password) == False: return False, "Invalid Password"
+        else: pass
         for row in cur.execute('SELECT * FROM Register'):
             RegID = row[0]
             row[3]
@@ -152,14 +135,10 @@ class backProcess:
                 return False, "Email already in use"
         cur.execute(f"INSERT INTO Register VALUES ('{int(RegID)+1}','{name}','{dob}','{email}','{password}')")
         con.commit()
-
-
         con.close()
         return True, int(RegID)+1
-    def Login(self,dob,password):#[5] login
-        if (dob or password) == "":
-            return False, "Empty Fields",""
-        #[7]
+    def Login(self,dob,password):#[5] login #[7]
+        if (dob or password) == "":  return False, "Empty Fields",""
         con = sqlite3.connect('database.db')
         cur = con.cursor()
         for row in cur.execute('SELECT * FROM Register ORDER BY name'):
@@ -175,16 +154,14 @@ class backProcess:
         try:
             for x in Tables:
                 Medication[x] = {}
-                for row in cur.execute(f'SELECT * FROM {x}'):
-                    Medication[x][row[0]] = {'Name':row[1],'Price':row[2],'Quantity':row[3],"QRCode":qrcode.make((x,row[0],row[1]))}
+                for row in cur.execute(f'SELECT * FROM {x}'): Medication[x][row[0]] = {'Name':row[1],'Price':row[2],'Quantity':row[3],"QRCode":qrcode.make((x,row[0],row[1]))}
         except:
             con.close()
             return False, []
         con.close()
         return True, Medication
     def RegisterOrder(self,ID,Name,Order,Path):
-        if (ID or Order) == "":
-            return False
+        if (ID or Order) == "": return False
         con = sqlite3.connect('database.db')
         cur = con.cursor()
         OrderID = ""
@@ -195,22 +172,17 @@ class backProcess:
                 OrderID = int(row[0])
                 break
             OrderID = int(row[0])+1
-        if OrderID == "":
-            OrderID = 1
+        if OrderID == "": OrderID = 1
         img=qrcode.make(f"Pharmacy Order: {int(OrderID)},{int(ID)}")
         img.save(f'{Path}/OrderCode.png') 
         New = str(Order).replace("'",'"')   
-        if Change == False:     
-            cur.execute(f"INSERT INTO Orders VALUES ('{int(OrderID)}','{ID}','{str(New)}','{img}')")
-        else:
-            cur.execute(f"UPDATE Orders SET 'Order'='{New}' WHERE OrderID='{OrderID}'")            
+        if Change == False: cur.execute(f"INSERT INTO Orders VALUES ('{int(OrderID)}','{ID}','{str(New)}','{img}')")
+        else: cur.execute(f"UPDATE Orders SET 'Order'='{New}' WHERE OrderID='{OrderID}'")            
         con.commit()
         con.close()
         backProcess.report_html(0,"Order",Order,Path,Name)
         return True
     def report_html(self,Stat,Order,Path,Name):
-        
-        
         html = """<html><head>
 <title><!--+Windowtitle+--></title>
 <style type="text/css">
@@ -226,18 +198,14 @@ h1, h2, h3, h4, h5, h6, p{ margin: 0;}
 </td> </tr>
 <tr><td align="center">
 <h4 style="font-weight: lighter; color: #999999; padding-top: 10px; padding-bottom: 5px;" > <!--+todaysdate+--> </h4>
-
 </td></tr>
 <tr><td align="center">
 <h4 style="font-weight: lighter; color: #999999; padding-top: 10px; padding-bottom: 5px;" > <!--+name+--> </h4>
-
 </td></tr>
 <tr><td><table id=billtable width="70%" border="0" cellspacing="0" cellpadding="0" align="center" style="border-collapse: collapse;">
 <!--+InsertHeadings+-->
-
 <!--+InsertLine+-->
 <!--+InsertTotal+-->
-
 </table></td></tr>
 <tr><td align="center">
 <!--+ImageQR+-->
@@ -247,12 +215,9 @@ h1, h2, h3, h4, h5, h6, p{ margin: 0;}
 </table>
 </body>
 </html>"""
-
-        
         now = datetime.now()
         html = html.replace("<!--+todaysdate+-->", now.strftime("%d/%m/%Y %H:%M"))
         html = html.replace("<!--+name+-->", Name)
-        
         if Stat == "Order":
             class OrderFunctions():
                 def headingInsert():
@@ -268,14 +233,11 @@ h1, h2, h3, h4, h5, h6, p{ margin: 0;}
                     return '\n'.join(Headings)
                 def tableInsert():
                     Table,TotalQ,TotalP = [],0,0
-
                     for a in Order:
-                        if a == "User_Name" or a == "User_ID" or a == "Order_ID":
-                            continue
+                        if a == "User_Name" or a == "User_ID" or a == "Order_ID": continue
                         for b in Order[a]:
                             Table.append('<tr style="border-top: 1px solid #999999;">')
-                            for c in Order[a][b]:
-                                Table.append(f'<td style="padding-top: 5px; padding-bottom: 5px;">{Order[a][b][c]}</td>')
+                            for c in Order[a][b]: Table.append(f'<td style="padding-top: 5px; padding-bottom: 5px;">{Order[a][b][c]}</td>')
                             Table.append('</tr>')
                             TotalQ += int(Order[a][b]["Quantity"])
                             TotalP += float(Order[a][b]["Quantity"])*float(Order[a][b]["Price"])
@@ -302,7 +264,6 @@ h1, h2, h3, h4, h5, h6, p{ margin: 0;}
             Receipt = "BookingReceipt"
 
         # dd/mm/YY H:M:S
-        with open(f'{Path}/{Receipt}.html', 'w') as f:
-            f.write(html)
+        with open(f'{Path}/{Receipt}.html', 'w') as f: f.write(html)
         
   
