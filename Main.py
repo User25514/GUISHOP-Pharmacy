@@ -15,7 +15,8 @@ class frontProcess:
         def __init__(self):
             super().__init__()
             self.setWindowTitle('Calendar')
-            self.setGeometry(300, 300, 385, 360)
+            self.setGeometry(100, 100, 385, 300)
+            self.setFixedSize(385, 300)
             self.initUI()
         def initUI(self):
             self.calendar = QCalendarWidget(self)
@@ -34,15 +35,13 @@ class frontProcess:
                 if (Day + 15) > calendar.monthrange(Year, Month)[1]:
                     newDay = (Day + 15) - calendar.monthrange(Year, Month)[1]
                     self.calendar.setMaximumDate(QDate(Year, Month+1, newDay))
-                else:
-                    self.calendar.setMaximumDate(QDate(Year, Month, Day + 15))
+                else:self.calendar.setMaximumDate(QDate(Year, Month, Day + 15))
             else:
                 self.calendar.setMinimumDate(QDate(Year-118, Month, Day))
                 self.calendar.setMaximumDate(QDate(Year-18, Month, Day))
             self.calendar.setSelectedDate(QDate(Year, Month, 1))
             self.calendar.clicked.connect(self.SaveDate)
-        def SaveDate(self, qDate):
-            self.qDate = qDate            
+        def SaveDate(self, qDate):self.qDate = qDate            
         def Confirmation(self):
                 data[data["Direction"]]["Date"] = '{0}/{1}/{2}'.format(self.qDate.month(), self.qDate.day(), self.qDate.year())
                 self.close()
@@ -50,15 +49,13 @@ class frontProcess:
         def __init__(self):
             super().__init__()
             self.OpenFolderDirectory()
-        def OpenFolderDirectory(self):
-            data[data["Direction"]]["Reciept Path"] = QFileDialog.getExistingDirectory(self,"Select The location to save or read your reciept")
-
+        def OpenFolderDirectory(self):data[data["Direction"]]["Reciept Path"] = QFileDialog.getExistingDirectory(self,"Select The location to save or read your reciept")
     def Book(layout,window):#[1] Confirmatin to the user that the slot was booked successfully.
         data["Direction"] = "Book"
         try:
-            for x in range(0,100):
-                layout.itemAt(x).widget().deleteLater()
+            for x in range(0,100):layout.itemAt(x).widget().deleteLater()
         except: pass
+        window.setWindowTitle('Menu')
         window.setGeometry(100, 100, 380, 400)
         window.setFixedSize(396, 448)
         bookLabel1 = QLabel("Date: ")
@@ -96,9 +93,7 @@ class frontProcess:
         qTimer = QTimer()
         qTimer.setInterval(1000)
         qTimer.timeout.connect(changeName)
-
         bookLabel2 = QLabel("Time: ")
-
         def TimeChoice():
             LabelThing = layout.sender()
             if LabelThing.isChecked():
@@ -107,7 +102,6 @@ class frontProcess:
             data["Direction"] = "Book"
             frontProcess.DirectoryPopup()
             if data["Book"]["Reciept Path"] != "[]":
-                print("imagine")
                 if (data["Book"]["Time"] and data["Book"]["Date"]) != "":
                     choice,Status = backProcess.BookRegister(data["User ID"],data["User Name"],data["Book"]["Time"],data["Book"]["Date"],data["Book"]["Reciept Path"])
                 else: choice,Status = False,"Failed to Book"
@@ -140,6 +134,7 @@ class frontProcess:
                 if Stat == True: # Existing File
                     if (val := ReadQR("Order")) != False:
                         statRec, message, data["Shop"]["Order"]= backProcess.OrderRecall(val)
+                        print(data["Shop"]["Order"])
                         alert = QMessageBox()
                         if statRec == True:
                             data["Booking ID"] = val[1]
@@ -154,7 +149,7 @@ class frontProcess:
                         alert.setText("QR code not found") 
                         alert.exec()
                 elif Stat == False: # Existing Booking
-                    if (val := ReadQR("Order")) != False:
+                    if (val := ReadQR("Book")) != False:
                         statRec, message = backProcess.BookRecallData(val)
                         alert = QMessageBox()
                         if statRec == True:
@@ -178,10 +173,9 @@ class frontProcess:
             alert = QMessageBox()
             if status == True:
                 alert.setText(message) 
-                alert.exec()
             else:
                 alert.setText(message)
-                alert.exec()
+            alert.exec()
         bookButton1 = QPushButton("Pay Online")
         bookButton1.clicked.connect(Payment)
         bookButton2 = QPushButton("Order Online")
@@ -203,15 +197,16 @@ class frontProcess:
     def Shop(layout,window):#[3][4][5] Browse medicines of the cargories provided.
         data["Direction"] = "Shop"
         try:
-            for x in range(0,100):
-                layout.itemAt(x).widget().deleteLater()
+            for x in range(0,100): layout.itemAt(x).widget().deleteLater()
         except: pass
+        window.setWindowTitle('Shop')
         window.setGeometry(100, 100, 500, 800)
         window.setFixedSize(500, 800)
         status, medication = backProcess.GrabMedication(data["Shop"]["Categories"])
         medication["Orders"] = {}
         if status == True:
             data["Shop"]["Section"] = data["Shop"]["Categories"][0]
+            medication["Orders"] = data["Shop"]["Order"]
             def CallMed():
                 x,y,ID = 6,0,1
                 for a in medication[data["Shop"]["Section"]]:
@@ -275,6 +270,7 @@ class frontProcess:
             if data["Shop"]["Reciept Path"] != "[]":
                 CrossWindow()
                 if medication["Status"] != False:
+                    print(medication["Orders"])
                     if len(medication["Orders"]) > 0 and data["Shop"]["Reciept Path"] != "[]":
                         choice = backProcess.RegisterOrder(data["Booking ID"],data["User Name"],medication["Orders"],data["Shop"]["Reciept Path"])
                     else: choice = False
@@ -305,6 +301,7 @@ def main(): # Login Register
     window.setGeometry(100, 100, 300, 400)
     window.setFixedSize(300, 400)
     layout = QGridLayout(window)
+    window.setWindowTitle('Login')
     logLabel1 = QLabel("DOB: ")
     cal = frontProcess.calendarPopup()
     def logCalendar():
@@ -490,43 +487,31 @@ class Testing():
 if __name__ == "__main__":
     run = "Main"
     if run == "Main":
-        data = {
-            "User ID":"",
+        data = {"User ID":"",
             "User Name":"",
             "Booking ID":"",
             "Direction":"",
-            "Register":{
-                "Status":False,
+            "Register":{"Status":False,
                 "Name":"",
                 "Date":"",
-                "Password":""
-            },
-            "Login":{
-                "Status":False,
-                "Date":""
-            },
-            "Book":{
-                "Status":False,
+                "Password":""},
+            "Login":{"Status":False,
+                "Date":""},
+            "Book":{"Status":False,
                 "Date":"",
                 "Time":"",
                 "Rough_Time":[],
                 "Rough_Timings":[],
-                "Reciept Path":"[]",
-            },
-            "Shop":{
-                "Status":False,
+                "Reciept Path":"[]"},
+            "Shop":{"Status":False,
                 "Categories":("Tablet","Liquid","Capsules"),
                 "Section":"",
                 "Name":"",
                 "Date":"",
                 "Reciept Path":"[]",
-                "Order":{}
-            },
-            "Payment":{
-                "Status":False,
-                "Reciept Path":"[]",
-            }
-        }
+                "Order":{},},
+            "Payment":{"Status":False,
+                "Reciept Path":"[]"}}
         main()
     elif run == "Test":
         import sqlite3

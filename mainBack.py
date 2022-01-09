@@ -173,6 +173,10 @@ class backProcess:
                 break
             OrderID = int(row[0])+1
         if OrderID == "": OrderID = 1
+        for row in cur.execute('SELECT * FROM Payments'):
+            if row[1] == str(OrderID):
+                con.close()
+                return False, "Order already paid"
         img=qrcode.make(f"Pharmacy Order: {int(OrderID)},{int(ID)}")
         img.save(f'{Path}/OrderCode.png') 
         New = str(Order).replace("'",'"')   
@@ -237,7 +241,9 @@ h1, h2, h3, h4, h5, h6, p{ margin: 0;}
                         if a == "User_Name" or a == "User_ID" or a == "Order_ID": continue
                         for b in Order[a]:
                             Table.append('<tr style="border-top: 1px solid #999999;">')
-                            for c in Order[a][b]: Table.append(f'<td style="padding-top: 5px; padding-bottom: 5px;">{Order[a][b][c]}</td>')
+                            for c in Order[a][b]: 
+                                if c == "Price": Table.append(f'<td style="padding-top: 5px; padding-bottom: 5px;">£{Order[a][b][c]}</td>')
+                                else: Table.append(f'<td style="padding-top: 5px; padding-bottom: 5px;">{Order[a][b][c]}</td>')
                             Table.append('</tr>')
                             TotalQ += int(Order[a][b]["Quantity"])
                             TotalP += float(Order[a][b]["Quantity"])*float(Order[a][b]["Price"])
