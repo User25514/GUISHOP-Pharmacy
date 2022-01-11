@@ -375,7 +375,7 @@ def main(): # Login Register
             data["User ID"] = ""
         else: pass
         alert.exec()
-    regButton1 = QPushButton("Approve")
+    regButton1 = QPushButton("Register")
     regButton1.clicked.connect(regNotification)
     #Login Stuff
     layout.addWidget(QLabel("Login: "),1,0)
@@ -447,15 +447,13 @@ class Testing():
                 assert backProcess.Login(NewDat["RegisterTest"]["DOB"],NewDat["RegisterTest"]["Password"])[0] == True
             @pytest.mark.xfail
             def FalseDataVal(self):
-                assert backProcess.Login("1/7/1998","TestPass") == (False,"No account found","")
+                assert backProcess.Login("1/7/1900","TestPass") == (False,"No account found","")
         class GrabMedicationTest(runeverything):
             def TrueDataVal(self):
                 assert backProcess.GrabMedication(["Tablet"])[0] == True
             @pytest.mark.xfail
             def FalseDataVal(self):
                 assert backProcess.GrabMedication(["Something Non Existent"]) == (False,[])
-        
-        
         def Curl(self):
             BookRecall = self.BookRecallTest()
             BookRecall.call_everything()
@@ -485,8 +483,8 @@ class Testing():
 
 
 if __name__ == "__main__":
-    run = "Main"
-    if run == "Main":
+    state = "Main"
+    if state == "Main":
         data = {"User ID":"",
             "User Name":"",
             "Booking ID":"",
@@ -513,7 +511,7 @@ if __name__ == "__main__":
             "Payment":{"Status":False,
                 "Reciept Path":"[]"}}
         main()
-    elif run == "Test":
+    elif state == "Test":
         import sqlite3
         con = sqlite3.connect('database.db')
         cur = con.cursor()
