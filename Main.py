@@ -76,7 +76,6 @@ class frontProcess:
                     offset = 8
                     for x in range(0,len(data["Book"]["Rough_Timings"])):
                         try:
-                            print(x+offset," ",layout.itemAt(x+offset).widget().text())
                             layout.itemAt(x+offset).widget().deleteLater()
                         except: pass
                     if Status == True:
@@ -134,7 +133,6 @@ class frontProcess:
                 if Stat == True: # Existing File
                     if (val := ReadQR("Order")) != False:
                         statRec, message, data["Shop"]["Order"]= backProcess.OrderRecall(val)
-                        print(data["Shop"]["Order"])
                         alert = QMessageBox()
                         if statRec == True:
                             data["Booking ID"] = val[1]
@@ -274,7 +272,6 @@ class frontProcess:
             if data["Shop"]["Reciept Path"] != "[]":
                 CrossWindow()
                 if medication["Status"] != False:
-                    print(medication["Orders"])
                     if len(medication["Orders"]) > 0 and data["Shop"]["Reciept Path"] != "[]":
                         choice = backProcess.RegisterOrder(data["Booking ID"],data["User Name"],medication["Orders"],data["Shop"]["Reciept Path"])
                     else: choice = False
@@ -405,7 +402,6 @@ def main(): # Login Register
     layout.addWidget(regButton1,12,2,1,1)
     window.setLayout(layout)
     window.show()
-    frontProcess.Shop(layout,window)
     try:
         app.exec(app.exec_())
     except:pass

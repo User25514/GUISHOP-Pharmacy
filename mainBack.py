@@ -68,7 +68,6 @@ class backProcess:
         con.close()
         return False, "No Booking was found"
     def PaymentRecall(self,IDs):
-        print(IDs)
         con = sqlite3.connect('database.db')
         cur = con.cursor()
         for row in cur.execute('SELECT * FROM Orders'):
