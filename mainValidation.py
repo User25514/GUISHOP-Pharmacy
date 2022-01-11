@@ -15,7 +15,7 @@ class dataValidation:
         def dobVal(DOB):
             try:
                 DOB = DOB.split("/")
-                date1 = date(int(DOB[2]),int(DOB[1]),int(DOB[0]))
+                date1 = date(int(DOB[2]),int(DOB[0]),int(DOB[1]))
                 date2 = datetime.now()
                 date3 = date2.year - date1.year
                 if date3 >= 18:

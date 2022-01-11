@@ -238,7 +238,9 @@ class frontProcess:
             medication["Status"] = True
             for a in  medication[data["Shop"]["Section"]]:
                 if a == "Orders" or a == "Status": continue
-                if  medication[data["Shop"]["Section"]][a]["Text"].text() == "": continue
+                if  medication[data["Shop"]["Section"]][a]["Text"].text() == "": 
+                    try:medication["Orders"][data["Shop"]["Section"]].pop(a)
+                    except: pass
                 elif int( medication[data["Shop"]["Section"]][a]["Text"].text()) > int(medication[data["Shop"]["Section"]][a]["Quantity"]):
                     medication[data["Shop"]["Section"]][a]["Error"].setText("Too many items")
                     medication["Status"] = False
@@ -249,8 +251,10 @@ class frontProcess:
                         "Quantity": int(medication[data["Shop"]["Section"]][a]["Text"].text())}
                     if not(data["Shop"]["Section"] in medication["Orders"]): medication["Orders"][data["Shop"]["Section"]] = {}
                     medication["Orders"][data["Shop"]["Section"]][a] = b
-                    if medication[data["Shop"]["Section"]][a]["Text"].text() == "0" or medication[data["Shop"]["Section"]][a]["Text"].text() == "": del medication["Orders"][data["Shop"]["Section"]][a]
-                    else: medication["Status"] = True
+                    try:
+                        if int(medication[data["Shop"]["Section"]][a]["Text"].text()) > 0: medication["Status"] = True
+                        else: raise Exception
+                    except Exception:medication["Orders"][data["Shop"]["Section"]].pop(a)
         def TimeChoice():
             LabelThing = layout.sender()
             if LabelThing.isChecked():
@@ -401,6 +405,7 @@ def main(): # Login Register
     layout.addWidget(regButton1,12,2,1,1)
     window.setLayout(layout)
     window.show()
+    frontProcess.Shop(layout,window)
     try:
         app.exec(app.exec_())
     except:pass
