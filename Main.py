@@ -401,13 +401,14 @@ def main(): # Login Register
     layout.addWidget(regButton1,12,2,1,1)
     window.setLayout(layout)
     window.show()
-    app.exec(app.exec_())
+    try:
+        app.exec(app.exec_())
+    except:pass
 class runeverything(object):
     def call_everything(self):
         for name in dir(self):
             obj = getattr(self, name)
             if callable(obj) and name != 'call_everything' and name[:2] != '__': obj()
-
 class Testing():
     def __init__(self):
         self.Curl()
