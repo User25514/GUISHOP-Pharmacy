@@ -97,12 +97,11 @@ class backProcess:
         con = sqlite3.connect('database.db')
         cur = con.cursor()
         for row in cur.execute('SELECT * FROM Orders'):
-            if row[0] == IDs[0] and row[1] == IDs[1]:
-                con.close()
-                return True, "Successful", ast.literal_eval(row[2])
-            elif row[0] == IDs[0] and row[1] != IDs[1]:
-                con.close()
-                return False, "Error with Order",False
+            if row[0] == IDs[0]:
+                for row2 in cur.execute('SELECT * FROM Bookings'):
+                    if row2[0] == IDs[0] and row2[1] == IDs[2]:
+                        con.close()
+                        return True, "Successful", ast.literal_eval(row[2])
         con.close()
         return False, "No Order was found",False
     def EditOrders(self,Order):
