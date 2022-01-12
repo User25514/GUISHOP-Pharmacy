@@ -98,14 +98,12 @@ class frontProcess:
         bookLabel2 = QLabel("Time: ")
         def TimeChoice():
             LabelThing = layout.sender()
-            if LabelThing.isChecked():
-                data["Book"]["Time"] = LabelThing.Time
+            if LabelThing.isChecked():data["Book"]["Time"] = LabelThing.Time
         def RegisterToDatabase(Direction):
             data["Direction"] = "Book"
             frontProcess.DirectoryPopup()
             if data["Book"]["Reciept Path"] != "[]":
-                if (data["Book"]["Time"] and data["Book"]["Date"]) != "":
-                    choice,Status = backProcess.BookRegister(data["User ID"],data["User Name"],data["Book"]["Time"],data["Book"]["Date"],data["Book"]["Reciept Path"])
+                if (data["Book"]["Time"] and data["Book"]["Date"]) != "":choice,Status = backProcess.BookRegister(data["User ID"],data["User Name"],data["Book"]["Time"],data["Book"]["Date"],data["Book"]["Reciept Path"])
                 else: choice,Status = False,"Failed to Book"
                 alert = QMessageBox()
                 if choice == True:
@@ -169,14 +167,15 @@ class frontProcess:
         def Payment():# Scan QR code on receipt.
             data["Direction"] = "Payment"
             frontProcess.DirectoryPopup()
-            val = ReadQR("Order")
-            status,message = backProcess.PaymentRecall(val)
-            alert = QMessageBox()
-            if status == True:
-                alert.setText(message) 
-            else:
-                alert.setText(message)
-            alert.exec()
+            if data["Payment"]["Reciept Path"] != "[]":
+                val = ReadQR("Order")
+                status,message = backProcess.PaymentRecall(val)
+                alert = QMessageBox()
+                if status == True:
+                    alert.setText(message) 
+                else:
+                    alert.setText(message)
+                alert.exec()
         bookButton1 = QPushButton("Pay Online")
         bookButton1.clicked.connect(Payment)
         bookButton2 = QPushButton("Order Online")
