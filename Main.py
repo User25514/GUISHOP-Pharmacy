@@ -49,7 +49,10 @@ class frontProcess:
         def __init__(self):
             super().__init__()
             self.OpenFolderDirectory()
-        def OpenFolderDirectory(self):data[data["Direction"]]["Reciept Path"] = QFileDialog.getExistingDirectory(self,"Select The location to save or read your reciept")
+        def OpenFolderDirectory(self):
+            data[data["Direction"]]["Reciept Path"] = "[]"
+            data[data["Direction"]]["Reciept Path"] = QFileDialog.getExistingDirectory(self,"Select The location to save or read your reciept")
+            if data[data["Direction"]]["Reciept Path"] == "": data[data["Direction"]]["Reciept Path"] = "[]"
     def Book(layout,window):#[1] Confirmatin to the user that the slot was booked successfully.
         data["Direction"] = "Book"
         try:
