@@ -1,4 +1,4 @@
-# GUISHOP-Pharmacy
+# GUISHOP-Pharmacy for University
 Basic Features:
 []Must allow login via name, date of birth, email and password. (password must be checked) 
 
